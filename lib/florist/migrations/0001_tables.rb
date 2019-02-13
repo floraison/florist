@@ -56,6 +56,7 @@ Sequel.migration do
 
       index :flor_task_id
       index :resource_name
+      index [ :resource_type, :resource_name ]
     end
   end
 
