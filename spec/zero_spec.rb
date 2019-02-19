@@ -30,7 +30,10 @@ describe 'Florist' do
 
   describe 'zero' do
 
-    it 'works'
+    it 'initializes' do
+
+      expect(@unit.class).to eq(Flor::Scheduler)
+    end
   end
 end
 
