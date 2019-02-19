@@ -3,7 +3,7 @@ Sequel.migration do
 
   up do
 
-    create_table :flor_tasks do
+    create_table :florist_tasks do
 
       primary_key :id, type: :Integer
       String :domain, null: false
@@ -32,7 +32,7 @@ Sequel.migration do
       index [ :exid, :nid ]
     end
 
-    create_table :flor_task_assignments do
+    create_table :florist_task_assignments do
 
       primary_key :id, type: :Integer
 
@@ -62,8 +62,8 @@ Sequel.migration do
 
   down do
 
-    drop_table :flor_tasks
-    drop_table :flor_task_assignments
+    drop_table :florist_tasks
+    drop_table :florist_task_assignments
   end
 end
 

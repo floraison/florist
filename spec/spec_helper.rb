@@ -7,12 +7,11 @@
 
 require 'pp'
 require 'ostruct'
+require 'fileutils'
 
 require 'jruby/synchronized' if RUBY_PLATFORM.match(/java/)
 
-require 'flor'
-require 'flor/unit'
-require 'fileutils'
+require 'florist'
 
 F = Flor
   # quicker access to Flor.to_s and co
