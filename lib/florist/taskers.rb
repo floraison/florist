@@ -3,6 +3,8 @@ module Florist
 
   class Tasker < ::Flor::BasicTasker
 
+    include Florist::Storing
+
     def task
     end
 
@@ -16,29 +18,7 @@ module Florist
 
     def task
 
-      n = Time.now
-
-      @ganger.unit.storage.transync do
-
-        ti = @ganger.unit.storage.db[:florist_tasks].insert(
-          domain: Flor.domain(exid),
-          exid: message['exid'],
-          nid: message['nid'],
-          content: Flor::Storage.to_blob(message),
-          ctime: n,
-          mtime: n,
-          status: 'created')
-
-        @ganger.unit.storage.db[:florist_task_assignments].insert(
-          task_id: ti,
-          type: '',
-          resource_name: message['tasker'],
-          resource_type: 'user',
-          content: nil,
-          ctime: n,
-          mtime: n,
-          status: 'active')
-      end
+      store_task(message['tasker'], 'user', message)
 
       []
 #rescue => err

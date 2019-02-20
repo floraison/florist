@@ -7,5 +7,6 @@ end
 require 'flor'
 require 'flor/unit'
 
+require 'florist/storing'
 require 'florist/taskers'
 
