@@ -36,8 +36,8 @@ Sequel.migration do
 
       primary_key :id
 
-      Integer :flor_task_id, null: false
-      #foreign_key :flor_task_id, :flor_tasks, on_delete: :cascade
+      Integer :task_id, null: false
+      #foreign_key :task_id, :flor_tasks, on_delete: :cascade
 
       String :type, null: false  # "", "forced", "automatic", "escalated", ...
 
@@ -54,7 +54,7 @@ Sequel.migration do
       String :status, null: false
         # "active" / "archived"
 
-      index :flor_task_id
+      index :task_id
       index :resource_name
       index [ :resource_type, :resource_name ]
     end
