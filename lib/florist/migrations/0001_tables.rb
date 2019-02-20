@@ -5,7 +5,7 @@ Sequel.migration do
 
     create_table :florist_tasks do
 
-      primary_key :id, type: :Integer
+      primary_key :id
       String :domain, null: false
       String :exid, null: false
       String :nid, null: false
@@ -34,7 +34,7 @@ Sequel.migration do
 
     create_table :florist_task_assignments do
 
-      primary_key :id, type: :Integer
+      primary_key :id
 
       Integer :flor_task_id, null: false
       #foreign_key :flor_task_id, :flor_tasks, on_delete: :cascade
