@@ -5,11 +5,13 @@ module Florist::Storing
 
   def storage
 
-    case
-    when @ganger then @ganger.unit.storage
-    when @unit then @unit.storage
-    when @storage then @storage
-    end
+    @storage ||=
+      case
+      when @ganger then @ganger.unit.storage
+      when @unit then @unit.storage
+      when @storage then @storage
+      else fail "no @ganger, @unit, or @storage found"
+      end
   end
 
   def store_task(rname, rtype, message, opts={})
