@@ -54,5 +54,10 @@ module Florist::Storing
 
     o ? Flor::Storage.to_blob(message) : nil
   end
+
+  def from_blob(c)
+
+    c ? Flor::Storage.from_blob(c) : nil
+  end
 end
 
