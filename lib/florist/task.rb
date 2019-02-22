@@ -1,6 +1,28 @@
 
 class Florist::Task < ::Flor::FlorModel
 
+  @models = {}
+
+  class << self
+
+    def tasks(db)
+
+      k = db.object_id.to_s.gsub('-', 'M')
+
+      @models[k] ||=
+        Florist.const_set(
+          "Task#{k}",
+          Class.new(Florist::Task) do
+            self.dataset = db[:florist_tasks]
+          end)
+    end
+
+    def assignments(db)
+
+      # TODO
+    end
+  end
+
   # create_table :florist_tasks do
   #   primary_key :id
   #   String :domain, null: false
@@ -42,4 +64,6 @@ class Florist::Task < ::Flor::FlorModel
   #   index [ :resource_type, :resource_name ]
   # end
 end
+
+Flor.add_model(:tasks, Florist, 'florist_')
 
