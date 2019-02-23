@@ -143,19 +143,24 @@ describe '::Florist' do
 
       @unit.add_tasker('accounting', Florist::GroupTasker)
       @unit.add_tasker('sales', Florist::GroupTasker)
+      @unit.add_tasker('alice', Florist::UserTasker)
 
-      2.times { @unit.launch(%q{ accounting _ }) }
-      2.times { @unit.launch(%q{ sales _ }) }
-      wait_until { @db[:florist_tasks].count == 4 }
+      2.times do
+        @unit.launch(%q{ accounting _ })
+        @unit.launch(%q{ sales _ })
+        @unit.launch(%q{ alice _ })
+      end
+
+      wait_until { @db[:florist_tasks].count == 6 }
+
+      @tasks = Florist.tasks(@db)
     end
 
     describe '#by_resource(name)' do
 
       it 'returns the tasks assigned to the given resource' do
 
-        tds = Florist.tasks(@db)
-
-        ts = tds.by_resource('accounting')
+        ts = @tasks.by_resource('accounting')
 
         expect(ts.size).to eq(2)
       end
@@ -163,7 +168,42 @@ describe '::Florist' do
 
     describe '#by_resource(type, name)' do
 
-      it 'returns the tasks assigned to the given resource'
+      it 'returns the tasks assigned to the given resource' do
+
+        ts = @tasks.by_resource('group', 'accounting')
+
+        expect(ts.size).to eq(2)
+      end
+    end
+
+    describe '#assigned_to' do
+
+      it 'is an alias to #by_resource' do
+
+        ts = @tasks.assigned_to('group', 'accounting')
+
+        expect(
+          ts.collect { |t| t.assignment.resource_type }
+        ).to eq(%w[ group ] * 2)
+        expect(
+          ts.collect { |t| t.assignment.resource_name }
+        ).to eq(%w[ accounting ] * 2)
+      end
+    end
+
+    describe '#by_assignment' do
+
+      it 'is an alias to #by_resource' do
+
+        ts = @tasks.by_assignment('group', 'accounting')
+
+        expect(
+          ts.collect { |t| t.assignment.resource_type }
+        ).to eq(%w[ group ] * 2)
+        expect(
+          ts.collect { |t| t.assignment.resource_name }
+        ).to eq(%w[ accounting ] * 2)
+      end
     end
   end
 end

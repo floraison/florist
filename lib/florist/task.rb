@@ -47,23 +47,24 @@ class Florist::Task < ::Flor::FlorModel
 
   class << self
 
-    def by_resource(type_or_name, name=:null)
+    def by_resource(type_or_name, name=nil)
 
       t, n =
-        if name == :null
-          [ :null, type_or_name ]
-        elsif type_or_name == nil
-          [ :null, name ]
-        else
+        if name
           [ type_or_name, name ]
+        else
+          [ nil, type_or_name ]
         end
 
       aq = db[:florist_task_assignments].select(:task_id)
-      aq = aq.where(resource_type: t) if t != :null
-      aq = aq.where(resource_name: n) if n != :null
+      aq = aq.where(resource_type: t) if t
+      aq = aq.where(resource_name: n) if n
 
       q = self.where(id: aq).all
     end
+
+    alias by_assignment by_resource
+    alias assigned_to by_resource
   end
 
   alias message data
@@ -85,6 +86,11 @@ class Florist::Task < ::Flor::FlorModel
 
     @assignments ||=
       @assignment_model.where(task_id: id).all.each { |a| a.task = self }
+  end
+
+  def assignment
+
+    assignments.first
   end
 
   def return(overlay={})
