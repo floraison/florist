@@ -128,6 +128,8 @@ describe '::Florist' do
         expect(r['point']).to eq('terminated')
         expect(r['payload']['ret']).to eq(1234)
         expect(r['payload']['name']).to eq('Alice')
+
+# TODO verify that the task and its assignments are gone
       end
     end
 
@@ -135,9 +137,24 @@ describe '::Florist' do
 
       it 'returns an error instead of the task'
     end
+
+    describe '#reassign' do
+
+      it 'removes the current assignments and inserts new ones'
+    end
+
+    describe '#assign' do
+
+      it 'adds news assignments for a task'
+    end
+
+    describe '#unassign' do
+
+      it 'deletes all the assignments for the task'
+    end
   end
 
-  describe '::Task999 (dedicated dataset)' do
+  describe '::Task333 (dedicated dataset)' do
 
     before :each do
 
@@ -204,6 +221,21 @@ describe '::Florist' do
           ts.collect { |t| t.assignment.resource_name }
         ).to eq(%w[ accounting ] * 2)
       end
+    end
+
+    describe '#without_assignment' do
+
+      it 'lists the tasks missing and assignments'
+      it 'returns an empty array when all the task are assigned'
+      it 'returns an empty array when there are no tasks'
+    end
+  end
+
+  describe '::TaskAssignment999 (dedicated dataset)' do
+
+    describe '#orphans' do
+
+      it 'lists the assignments pointing to unknown tasks'
     end
   end
 end
