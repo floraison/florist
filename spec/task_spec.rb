@@ -51,11 +51,41 @@ describe '::Florist' do
 
         wait_until { @db[:florist_tasks].count == 2 }
 
-        tds = Florist::Task.tasks(@db)
+        tds = Florist.tasks(@db)
 
         expect(tds.count).to eq(2)
         expect(tds.all.collect(&:exid).sort).to eq(exids.sort)
       end
+    end
+  end
+
+  describe '::Task999 (dedicated dataset)' do
+
+    before :each do
+
+      @unit.add_tasker('accounting', Florist::GroupTasker)
+      @unit.add_tasker('sales', Florist::GroupTasker)
+
+      2.times { @unit.launch(%q{ accounting _ }) }
+      2.times { @unit.launch(%q{ sales _ }) }
+      wait_until { @db[:florist_tasks].count == 4 }
+    end
+
+    describe '#by_resource(name)' do
+
+      it 'returns the tasks assigned to the given resource' do
+
+        tds = Florist.tasks(@db)
+
+        ts = tds.by_resource('accounting')
+
+        expect(ts.size).to eq(2)
+      end
+    end
+
+    describe '#by_resource(type, name)' do
+
+      it 'returns the tasks assigned to the given resource'
     end
   end
 end

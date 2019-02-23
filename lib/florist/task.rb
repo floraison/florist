@@ -1,27 +1,55 @@
 
-class Florist::Task < ::Flor::FlorModel
-
-  @models = {}
+module Florist
 
   class << self
 
     def tasks(db)
 
-      k = db.object_id.to_s.gsub('-', 'M')
-
-      @models[k] ||=
-        Florist.const_set(
-          "Task#{k}",
-          Class.new(Florist::Task) do
-            self.dataset = db[:florist_tasks]
-          end)
+      Class.new(Florist::Task) do
+        self.dataset = db[:florist_tasks]
+      end
     end
 
-    def assignments(db)
+    #def assignments(db)
+    #  # TODO
+    #end
+  end
+end
 
-      # TODO
+class Florist::Task < ::Flor::FlorModel
+
+  class << self
+
+    def by_resource(type_or_name, name=:null)
+
+      t, n =
+        if name == :null
+          [ :null, type_or_name ]
+        elsif type_or_name == nil
+          [ :null, name ]
+        else
+          [ type_or_name, name ]
+        end
+
+      aq = db[:florist_task_assignments].select(:task_id)
+      aq = aq.where(resource_type: t) if t != :null
+      aq = aq.where(resource_name: n) if n != :null
+
+      q = self.where(id: aq).all
     end
   end
+
+  alias message data
+
+  def return(overlay={})
+  end
+
+  def return_error(err)
+  end
+#    def reply_with_error(error)
+#      reply(
+#        Flor.to_error_message(@message, error))
+#    end
 
   # create_table :florist_tasks do
   #   primary_key :id
