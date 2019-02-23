@@ -101,15 +101,25 @@ class Florist::Task < ::Flor::FlorModel
     m['point'] = 'return'
     m['payload'] = payload
 
-    db[:flor_messages]
-      .insert(
-        domain: domain,
-        exid: exid,
-        point: 'return',
-        content: Flor::Storage.to_blob(m),
-        status: 'created',
-        ctime: n,
-        mtime: n)
+    db.transaction do
+
+      tc = db[:florist_tasks]
+        .where(id: id).delete
+      tac = db[:florist_task_assignments]
+        .where(task_id: id).delete
+
+      db[:flor_messages]
+        .insert(
+          domain: domain,
+          exid: exid,
+          point: 'return',
+          content: Flor::Storage.to_blob(m),
+          status: 'created',
+          ctime: n,
+          mtime: n)
+
+      tc
+    end
   end
 
 #    def reply_with_error(error)

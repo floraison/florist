@@ -129,7 +129,8 @@ describe '::Florist' do
         expect(r['payload']['ret']).to eq(1234)
         expect(r['payload']['name']).to eq('Alice')
 
-# TODO verify that the task and its assignments are gone
+        expect(@unit.tasks.count).to eq(0)
+        expect(@unit.task_assignments.count).to eq(0)
       end
     end
 
