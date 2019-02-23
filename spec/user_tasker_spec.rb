@@ -14,12 +14,13 @@ describe '::Florist' do
 
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
-      db_migrations: 'spec/migrations',
-      sto_uri: storage_uri)
+      sto_uri: storage_uri,
+      sto_migration_dir: 'spec/migrations',
+      sto_sparse_migrations: true)
     @unit.conf['unit'] = 'utspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
-    @unit.storage.migrate(allow_missing_migration_files: true)
+    @unit.storage.migrate
     @unit.start
   end
 
