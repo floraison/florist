@@ -57,6 +57,38 @@ describe '::Florist' do
         expect(tds.all.collect(&:exid).sort).to eq(exids.sort)
       end
     end
+
+    describe '#message' do
+
+      it 'returns the original message' do
+
+        @unit.add_tasker('accounting', Florist::GroupTasker)
+
+        r = @unit.launch(%q{ accounting _ }, wait: 'task')
+
+        t = @unit.tasks.first
+        m = t.message
+
+        expect(m['m']).to eq(r['m'])
+        expect(m['point']).to eq('task')
+        expect(m['tasker']).to eq('accounting')
+      end
+    end
+
+    describe '#payload' do
+
+      it 'returns the current payload' do
+
+        @unit.add_tasker('accounting', Florist::GroupTasker)
+
+        r = @unit.launch(%q{ accounting _ }, wait: 'task')
+
+        t = @unit.tasks.first
+        pl = t.payload
+
+        expect(pl).to eq(r['payload'])
+      end
+    end
   end
 
   describe '::Task999 (dedicated dataset)' do

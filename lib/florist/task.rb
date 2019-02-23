@@ -41,6 +41,16 @@ class Florist::Task < ::Flor::FlorModel
 
   alias message data
 
+  def payload
+
+    @payload ||= _data['payload']
+  end
+
+  def payload=(h)
+
+    @payload = h
+  end
+
   def return(overlay={})
   end
 
