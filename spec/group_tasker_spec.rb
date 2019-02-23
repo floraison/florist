@@ -16,7 +16,7 @@ describe '::Florist' do
       loader: Flor::HashLoader,
       db_migrations: 'spec/migrations',
       sto_uri: storage_uri)
-    @unit.conf['unit'] = 'utspec'
+    @unit.conf['unit'] = 'gtspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
     @unit.storage.migrate(allow_missing_migration_files: true)
