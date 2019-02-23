@@ -13,14 +13,9 @@ describe '::Florist' do
   before :each do
 
     @unit = Flor::Unit.new(
-      loader:
-        Flor::HashLoader,
-      db_migrations:
-        'spec/migrations',
-      sto_uri:
-        RUBY_PLATFORM.match(/java/) ?
-        'jdbc:sqlite://tmp/florist_test.db' :
-        'sqlite::memory:')
+      loader: Flor::HashLoader,
+      db_migrations: 'spec/migrations',
+      sto_uri: storage_uri)
     @unit.conf['unit'] = 'utspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables

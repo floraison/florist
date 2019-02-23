@@ -69,6 +69,11 @@ module Helpers
     end
     puts x + '>' + ('-' * 78) + '.' + c.reset
   end
+
+  def storage_uri(key='one')
+
+    jruby? ? "jdbc:sqlite://tmp/florist_#{key}test.db" : 'sqlite::memory:'
+  end
 end
 
 RSpec.configure do |c|
