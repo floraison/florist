@@ -108,6 +108,33 @@ describe '::Florist' do
         expect(a.task.id).to eq(t.id)
       end
     end
+
+    describe '#return' do
+
+      it 'returns a task to its execution' do
+
+        @unit.add_tasker('alice', Florist::UserTasker)
+
+        r = @unit.launch(%q{ alice _ }, wait: 'task')
+
+        t = @unit.tasks.first
+
+        t.payload['ret'] = 1234
+        t.payload['name'] = 'Alice'
+        t.return
+
+        r = @unit.wait(r['exid'], 'terminated')
+
+        expect(r['point']).to eq('terminated')
+        expect(r['payload']['ret']).to eq(1234)
+        expect(r['payload']['name']).to eq('Alice')
+      end
+    end
+
+    describe '#return_error' do
+
+      it 'returns an error instead of the task'
+    end
   end
 
   describe '::Task999 (dedicated dataset)' do

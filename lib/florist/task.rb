@@ -21,6 +21,30 @@ end
 
 class Florist::Task < ::Flor::FlorModel
 
+  # create_table :florist_tasks do
+  #   primary_key :id
+  #   String :domain, null: false
+  #   String :exid, null: false
+  #   String :nid, null: false
+  #   File :content # JSON
+  #   String :ctime, null: false  # creation time
+  #   String :mtime, null: false  # last modification time
+  #
+  #   String :status, null: false
+  #     # http://www.workflowpatterns.com/patterns/resource/
+  #     # "created"
+  #     # "offered"
+  #     # "allocated"
+  #     # "started"
+  #     # "suspended"
+  #     # "failed"
+  #     # "completed"
+  #
+  #   index :domain
+  #   index :exid
+  #   index [ :exid, :nid ]
+  # end
+
   class << self
 
     def by_resource(type_or_name, name=:null)
@@ -64,39 +88,36 @@ class Florist::Task < ::Flor::FlorModel
   end
 
   def return(overlay={})
+
+    n = Flor.tstamp
+
+    m = Flor.dup(message)
+    m['point'] = 'return'
+    m['payload'] = payload
+
+    db[:flor_messages]
+      .insert(
+        domain: domain,
+        exid: exid,
+        point: 'return',
+        content: Flor::Storage.to_blob(m),
+        status: 'created',
+        ctime: n,
+        mtime: n)
   end
 
-  def return_error(err)
-  end
 #    def reply_with_error(error)
 #      reply(
 #        Flor.to_error_message(@message, error))
 #    end
+  def return_error(err)
 
-  # create_table :florist_tasks do
-  #   primary_key :id
-  #   String :domain, null: false
-  #   String :exid, null: false
-  #   String :nid, null: false
-  #   File :content # JSON
-  #   String :ctime, null: false  # creation time
-  #   String :mtime, null: false  # last modification time
-  #
-  #   String :status, null: false
-  #     # http://www.workflowpatterns.com/patterns/resource/
-  #     # "created"
-  #     # "offered"
-  #     # "allocated"
-  #     # "started"
-  #     # "suspended"
-  #     # "failed"
-  #     # "completed"
-  #
-  #   index :domain
-  #   index :exid
-  #   index [ :exid, :nid ]
-  # end
-  #
+fail NotImplementedError
+  end
+end
+
+class Florist::TaskAssignment < ::Flor::FlorModel
+
   # create_table :florist_task_assignments do
   #   primary_key :id
   #   Integer :task_id, null: false
@@ -113,9 +134,6 @@ class Florist::Task < ::Flor::FlorModel
   #   index :resource_name
   #   index [ :resource_type, :resource_name ]
   # end
-end
-
-class Florist::TaskAssignment < ::Flor::FlorModel
 
   attr_accessor :task
 end
