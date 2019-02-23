@@ -10,9 +10,12 @@ module Florist
       end
     end
 
-    #def assignments(db)
-    #  # TODO
-    #end
+    def assignments(db)
+
+      Class.new(Florist::TaskAssignment) do
+        self.dataset = db[:florist_task_assignments]
+      end
+    end
   end
 end
 
@@ -49,6 +52,15 @@ class Florist::Task < ::Flor::FlorModel
   def payload=(h)
 
     @payload = h
+  end
+
+  def assignments
+
+    @assignment_model ||=
+      Florist.assignments(db)
+
+    @assignments ||=
+      @assignment_model.where(task_id: id).all.each { |a| a.task = self }
   end
 
   def return(overlay={})
@@ -103,5 +115,11 @@ class Florist::Task < ::Flor::FlorModel
   # end
 end
 
+class Florist::TaskAssignment < ::Flor::FlorModel
+
+  attr_accessor :task
+end
+
 Flor.add_model(:tasks, Florist, 'florist_')
+Flor.add_model(:task_assignments, Florist, 'florist_')
 

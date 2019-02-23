@@ -89,6 +89,25 @@ describe '::Florist' do
         expect(pl).to eq(r['payload'])
       end
     end
+
+    describe '#assignments' do
+
+      it 'lists the task assignments' do
+
+        @unit.add_tasker('accounting', Florist::GroupTasker)
+
+        @unit.launch(%q{ accounting _ }, wait: 'task')
+
+        t = @unit.tasks.first
+
+        expect(t.assignments.size).to eq(1)
+
+        a = t.assignments.first
+
+        expect(a.task_id).to eq(t.id)
+        expect(a.task.id).to eq(t.id)
+      end
+    end
   end
 
   describe '::Task999 (dedicated dataset)' do
