@@ -67,6 +67,9 @@ class Florist::Task < ::Flor::FlorModel
     alias assigned_to by_resource
   end
 
+  #
+  # accessors et al
+
   alias message data
 
   def tasker; message['tasker']; end
@@ -107,6 +110,23 @@ class Florist::Task < ::Flor::FlorModel
   end
 
   def assignment; assignments.first; end
+
+  def execution
+
+    return nil unless db.table_exists?(:flor_executions)
+
+    exes = db[:flor_executions]
+
+    @execution_class ||=
+      Class.new(Flor::Execution) do
+        self.dataset = exes
+      end
+
+    @execution_class[exid: exid]
+  end
+
+  #
+  # actions
 
   def return(overlay={})
 

@@ -58,9 +58,6 @@ describe '::Florist' do
 
       before :each do
 
-        #@unit.add_tasker(
-        #  'alice',
-        #  Florist::UserTasker)
         @unit.add_tasker(
           'alice',
           { class: Florist::UserTasker, include_vars: true })
@@ -74,6 +71,8 @@ describe '::Florist' do
           },
           payload: { 'kilroy' => 'was here' },
           wait: 'task')
+
+        wait_until { @unit.executions.count == 1 }
       end
 
       describe '#message' do
@@ -173,8 +172,29 @@ describe '::Florist' do
 
       describe '#execution' do
 
-        it 'returns nil if the task db is separate from the execution db'
-        it 'returns the execution that emitted the task'
+        it 'returns nil if the task db is separate from the execution db' do
+
+          @unit.storage.db.drop_table(:flor_executions)
+
+          t = @unit.tasks.first
+
+          expect(t.execution).to eq(nil)
+        end
+
+        it 'returns the execution that emitted the task' do
+
+          t = @unit.tasks.first
+
+          x = t.execution
+
+          expect(x.exid).to eq(t.exid)
+
+          expect(
+            x.data['nodes']['0_2']['payload']
+          ).to eq(
+            { 'kilroy' => 'was here', 'ret' => nil }
+          )
+        end
       end
     end
 
