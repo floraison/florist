@@ -234,7 +234,21 @@ describe '::Florist' do
 
       describe '#return_error' do
 
-        it 'returns an error instead of the task'
+        it 'returns an error instead of the task' do
+
+          t = @unit.tasks.first
+
+          err = ArgumentError.new('pure fail')
+
+          t.return_error(err)
+
+          r = @unit.wait(@r['exid'], 'failed')
+
+          expect(r['m']).not_to eq(@r['m'])
+          expect(r['point']).to eq('failed')
+          expect(r['error']['kla']).to eq('ArgumentError')
+          expect(r['error']['msg']).to eq('pure fail')
+        end
       end
 
       describe '#reassign' do

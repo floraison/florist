@@ -131,43 +131,36 @@ class Florist::Task < ::Flor::FlorModel
   #
   # actions
 
-  def return(overlay={})
+  def return(opts={})
 
-    n = Flor.tstamp
+    # [o] TODO current payload (default) OR
+    # [ ] TODO original payload OR
+    # [ ] TODO overlay payload OR
+    # [ ] TODO new payload
 
     m = Flor.dup(message)
     m['point'] = 'return'
-    m['payload'] = payload
+    m['payload'] = Flor.to_string_keyed_hash(payload)
 
-    db.transaction do
-
-      tc = db[:florist_tasks]
-        .where(id: id).delete
-      tac = db[:florist_task_assignments]
-        .where(task_id: id).delete
-
-      db[:flor_messages]
-        .insert(
-          domain: domain,
-          exid: exid,
-          point: 'return',
-          content: Flor::Storage.to_blob(m),
-          status: 'created',
-          ctime: n,
-          mtime: n)
-
-      tc
-    end
+    queue_message(m)
   end
 
-#    def reply_with_error(error)
-#      reply(
-#        Flor.to_error_message(@message, error))
-#    end
-  def return_error(err)
+  alias reply return
 
-fail NotImplementedError
+  def return_error(err, opts={})
+
+    # [o] TODO current payload (default) OR
+    # [ ] TODO original payload OR
+    # [ ] TODO overlay payload OR
+    # [ ] TODO new payload
+
+    m = Flor.to_error_message(message, err)
+    #m['payload'] = payload
+
+    queue_message(m)
   end
+
+  alias reply_with_error return_error
 
   def assign(resource_type, resource_name, opts={})
 
@@ -186,6 +179,31 @@ fail NotImplementedError
         ctime: now,
         mtime: now,
         status: ast)
+  end
+
+  protected
+
+  def queue_message(msg)
+
+    now = Flor.tstamp
+
+    db.transaction do
+
+      tc = db[:florist_tasks].where(id: id).delete
+      tac = db[:florist_task_assignments].where(task_id: id).delete
+
+      db[:flor_messages]
+        .insert(
+          domain: domain,
+          exid: exid,
+          point: 'return',
+          content: Flor::Storage.to_blob(msg),
+          status: 'created',
+          ctime: now,
+          mtime: now)
+
+      tc
+    end
   end
 end
 
