@@ -79,6 +79,9 @@ class Florist::Task < ::Flor::FlorModel
     @payload = h
   end
 
+  alias fields payload
+  alias fields= payload=
+
   def assignments
 
     @assignment_model ||=

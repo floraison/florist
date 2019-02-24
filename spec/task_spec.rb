@@ -71,7 +71,7 @@ describe '::Florist' do
       end
     end
 
-    describe '#payload' do
+    describe '#payload / #fields' do
 
       it 'returns the current payload' do
 
@@ -80,9 +80,9 @@ describe '::Florist' do
         r = @unit.launch(%q{ accounting _ }, wait: 'task')
 
         t = @unit.tasks.first
-        pl = t.payload
 
-        expect(pl).to eq(r['payload'])
+        expect(t.payload).to eq(r['payload'])
+        expect(t.fields).to eq(r['payload'])
       end
     end
 
@@ -103,6 +103,37 @@ describe '::Florist' do
         expect(a.task_id).to eq(t.id)
         expect(a.task.id).to eq(t.id)
       end
+    end
+
+    describe '#attl / #atts / #atta' do
+
+      it 'returns the task attribute list/array'
+    end
+
+    describe '#attd' do
+
+      it 'returns the task attribute dictionary'
+    end
+
+    describe '#tasker' do
+
+      it 'returns the tasker as indicated in the execution'
+    end
+
+    describe '#taskname / #task_name' do
+
+      it 'returns the name of the task'
+    end
+
+    describe '#vars / #vard' do
+
+      it 'returns the var dictionary coming with the task'
+    end
+
+    describe '#execution' do
+
+      it 'returns nil if the task db is separate from the execution db'
+      it 'returns the execution that emitted the task'
     end
 
     describe '#return' do
