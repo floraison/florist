@@ -200,13 +200,20 @@ describe '::Florist' do
 
     context 'actions' do
 
+      before :each do
+
+        @db = @unit.storage.db
+
+        @unit.add_tasker('alice', Florist::UserTasker)
+
+        @r = @unit.launch(%q{ alice _ }, wait: 'task')
+
+        wait_until { @unit.tasks.count == 1 }
+      end
+
       describe '#return' do
 
         it 'returns a task to its execution' do
-
-          @unit.add_tasker('alice', Florist::UserTasker)
-
-          r = @unit.launch(%q{ alice _ }, wait: 'task')
 
           t = @unit.tasks.first
 
@@ -214,7 +221,7 @@ describe '::Florist' do
           t.payload['name'] = 'Alice'
           t.return
 
-          r = @unit.wait(r['exid'], 'terminated')
+          r = @unit.wait(@r['exid'], 'terminated')
 
           expect(r['point']).to eq('terminated')
           expect(r['payload']['ret']).to eq(1234)
@@ -237,7 +244,18 @@ describe '::Florist' do
 
       describe '#assign' do
 
-        it 'adds news assignments for a task'
+        it 'adds new assignments for a task'
+#
+#          t = @unit.tasks.first
+#
+#          expect(@db[:florist_task_assignments].count).to eq(1)
+#          expect(t.assignments.count).to eq(1)
+#
+#          t.assign('group', 'accounting')
+#          t.assign('user', 'bob')
+#
+#          expect(@db[:florist_task_assignments].count).to eq(3)
+#        end
       end
 
       describe '#unassign' do

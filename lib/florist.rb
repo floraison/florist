@@ -8,6 +8,5 @@ require 'flor'
 require 'flor/unit'
 
 require 'florist/task'
-require 'florist/storing'
 require 'florist/taskers'
 

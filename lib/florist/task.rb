@@ -165,6 +165,12 @@ class Florist::Task < ::Flor::FlorModel
 
 fail NotImplementedError
   end
+
+#  def assign(resource_type, resource_name)
+#
+#    db[:flor_task_assignments]
+#      .insert(
+#  end
 end
 
 class Florist::TaskAssignment < ::Flor::FlorModel
