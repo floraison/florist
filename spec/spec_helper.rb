@@ -70,9 +70,13 @@ module Helpers
     puts x + '>' + ('-' * 78) + '.' + c.reset
   end
 
-  def storage_uri(key='one')
+  def storage_uri(key=nil)
 
-    jruby? ? "jdbc:sqlite://tmp/florist_#{key}test.db" : 'sqlite::memory:'
+    if key
+      "#{jruby? ? 'jdbc:' : ''}sqlite:://tmp/florist_#{key}_test.db"
+    else
+      jruby? ? 'jdbc:sqlite://tmp/florist_test.db' : 'sqlite::memory:'
+    end
   end
 end
 
