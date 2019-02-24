@@ -54,131 +54,176 @@ describe '::Florist' do
       end
     end
 
-    describe '#message' do
+    context 'accessors' do
 
-      it 'returns the original message' do
+      before :each do
 
-        @unit.add_tasker('accounting', Florist::GroupTasker)
+        #@unit.add_tasker(
+        #  'alice',
+        #  Florist::UserTasker)
+        @unit.add_tasker(
+          'alice',
+          { class: Florist::UserTasker, include_vars: true })
 
-        r = @unit.launch(%q{ accounting _ }, wait: 'task')
+        @r = @unit.launch(
+          %q{
+            sequence
+              set v0 'hello'
+              set v1 2345
+              alice 'send message' addressee: 'bob'
+          },
+          payload: { 'kilroy' => 'was here' },
+          wait: 'task')
+      end
 
-        t = @unit.tasks.first
-        m = t.message
+      describe '#message' do
 
-        expect(m['m']).to eq(r['m'])
-        expect(m['point']).to eq('task')
-        expect(m['tasker']).to eq('accounting')
+        it 'returns the original message' do
+
+          t = @unit.tasks.first
+          m = t.message
+
+          expect(m['m']).to eq(@r['m'])
+          expect(m['point']).to eq('task')
+          expect(m['tasker']).to eq('alice')
+        end
+      end
+
+      describe '#payload / #fields' do
+
+        it 'returns the current payload' do
+
+          t = @unit.tasks.first
+
+          expect(t.payload).to eq({ 'kilroy' => 'was here', 'ret' => nil })
+          expect(t.payload).to eq(@r['payload'])
+          expect(t.fields).to eq(@r['payload'])
+        end
+      end
+
+      describe '#assignments' do
+
+        it 'lists the task assignments' do
+
+          t = @unit.tasks.first
+
+          expect(t.assignments.size).to eq(1)
+
+          a = t.assignments.first
+
+          expect(a.task_id).to eq(t.id)
+          expect(a.task.id).to eq(t.id)
+        end
+      end
+
+      describe '#attl / #atts / #atta' do
+
+        it 'returns the task attribute list/array' do
+
+          t = @unit.tasks.first
+
+          expect(t.attl).to eq([ 'alice', 'send message' ])
+          expect(t.atts).to eq([ 'alice', 'send message' ])
+          expect(t.atta).to eq([ 'alice', 'send message' ])
+        end
+      end
+
+      describe '#attd / #atth' do
+
+        it 'returns the task attribute dictionary' do
+
+          t = @unit.tasks.first
+
+          expect(t.attd).to eq({ 'addressee' => 'bob' })
+          expect(t.atth).to eq({ 'addressee' => 'bob' })
+        end
+      end
+
+      describe '#tasker' do
+
+        it 'returns the tasker as indicated in the execution' do
+
+          t = @unit.tasks.first
+
+          expect(t.tasker).to eq('alice')
+        end
+      end
+
+      describe '#taskname / #task_name' do
+
+        it 'returns the name of the task' do
+
+          t = @unit.tasks.first
+
+          expect(t.taskname).to eq('send message')
+          expect(t.task_name).to eq('send message')
+        end
+      end
+
+      describe '#vars / #vard' do
+
+        it 'returns the var dictionary coming with the task' do
+
+          t = @unit.tasks.first
+
+          expect(t.vars).to eq({ 'v0' => 'hello', 'v1' => 2345 })
+          expect(t.vard).to eq({ 'v0' => 'hello', 'v1' => 2345 })
+        end
+      end
+
+      describe '#execution' do
+
+        it 'returns nil if the task db is separate from the execution db'
+        it 'returns the execution that emitted the task'
       end
     end
 
-    describe '#payload / #fields' do
+    context 'actions' do
 
-      it 'returns the current payload' do
+      describe '#return' do
 
-        @unit.add_tasker('accounting', Florist::GroupTasker)
+        it 'returns a task to its execution' do
 
-        r = @unit.launch(%q{ accounting _ }, wait: 'task')
+          @unit.add_tasker('alice', Florist::UserTasker)
 
-        t = @unit.tasks.first
+          r = @unit.launch(%q{ alice _ }, wait: 'task')
 
-        expect(t.payload).to eq(r['payload'])
-        expect(t.fields).to eq(r['payload'])
+          t = @unit.tasks.first
+
+          t.payload['ret'] = 1234
+          t.payload['name'] = 'Alice'
+          t.return
+
+          r = @unit.wait(r['exid'], 'terminated')
+
+          expect(r['point']).to eq('terminated')
+          expect(r['payload']['ret']).to eq(1234)
+          expect(r['payload']['name']).to eq('Alice')
+
+          expect(@unit.tasks.count).to eq(0)
+          expect(@unit.task_assignments.count).to eq(0)
+        end
       end
-    end
 
-    describe '#assignments' do
+      describe '#return_error' do
 
-      it 'lists the task assignments' do
-
-        @unit.add_tasker('accounting', Florist::GroupTasker)
-
-        @unit.launch(%q{ accounting _ }, wait: 'task')
-
-        t = @unit.tasks.first
-
-        expect(t.assignments.size).to eq(1)
-
-        a = t.assignments.first
-
-        expect(a.task_id).to eq(t.id)
-        expect(a.task.id).to eq(t.id)
+        it 'returns an error instead of the task'
       end
-    end
 
-    describe '#attl / #atts / #atta' do
+      describe '#reassign' do
 
-      it 'returns the task attribute list/array'
-    end
-
-    describe '#attd' do
-
-      it 'returns the task attribute dictionary'
-    end
-
-    describe '#tasker' do
-
-      it 'returns the tasker as indicated in the execution'
-    end
-
-    describe '#taskname / #task_name' do
-
-      it 'returns the name of the task'
-    end
-
-    describe '#vars / #vard' do
-
-      it 'returns the var dictionary coming with the task'
-    end
-
-    describe '#execution' do
-
-      it 'returns nil if the task db is separate from the execution db'
-      it 'returns the execution that emitted the task'
-    end
-
-    describe '#return' do
-
-      it 'returns a task to its execution' do
-
-        @unit.add_tasker('alice', Florist::UserTasker)
-
-        r = @unit.launch(%q{ alice _ }, wait: 'task')
-
-        t = @unit.tasks.first
-
-        t.payload['ret'] = 1234
-        t.payload['name'] = 'Alice'
-        t.return
-
-        r = @unit.wait(r['exid'], 'terminated')
-
-        expect(r['point']).to eq('terminated')
-        expect(r['payload']['ret']).to eq(1234)
-        expect(r['payload']['name']).to eq('Alice')
-
-        expect(@unit.tasks.count).to eq(0)
-        expect(@unit.task_assignments.count).to eq(0)
+        it 'removes the current assignments and inserts new ones'
       end
-    end
 
-    describe '#return_error' do
+      describe '#assign' do
 
-      it 'returns an error instead of the task'
-    end
+        it 'adds news assignments for a task'
+      end
 
-    describe '#reassign' do
+      describe '#unassign' do
 
-      it 'removes the current assignments and inserts new ones'
-    end
-
-    describe '#assign' do
-
-      it 'adds news assignments for a task'
-    end
-
-    describe '#unassign' do
-
-      it 'deletes all the assignments for the task'
+        it 'deletes all the assignments for the task'
+      end
     end
   end
 

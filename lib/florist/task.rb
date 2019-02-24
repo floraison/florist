@@ -69,6 +69,18 @@ class Florist::Task < ::Flor::FlorModel
 
   alias message data
 
+  def tasker; message['tasker']; end
+
+  def taskname; message['taskname']; end
+  alias task_name taskname
+
+  def attl; message['attl']; end
+  alias atta attl
+  alias atts attl
+
+  def attd; message['attd']; end
+  alias atth attd
+
   def payload
 
     @payload ||= _data['payload']
@@ -82,6 +94,9 @@ class Florist::Task < ::Flor::FlorModel
   alias fields payload
   alias fields= payload=
 
+  def vars; message['vars']; end
+  alias vard vars
+
   def assignments
 
     @assignment_model ||=
@@ -91,10 +106,7 @@ class Florist::Task < ::Flor::FlorModel
       @assignment_model.where(task_id: id).all.each { |a| a.task = self }
   end
 
-  def assignment
-
-    assignments.first
-  end
+  def assignment; assignments.first; end
 
   def return(overlay={})
 
