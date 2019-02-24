@@ -5,17 +5,16 @@ module Florist
 
     protected
 
-    def db
+    def get_db
 
-      @db ||=
-        if db = @conf['db'] # FIXME, does not go through tconf serialization!
-          db
-        elsif uri = @conf['db_uri']
-          os = @conf['sequel_options'] || @conf['db_options'] || {}
-          Sequel.connect(uri, os)
-        else
-          @ganger.unit.storage.db
-        end
+      @uri ||= @conf['db_uri'] || @conf['uri']
+
+      if @uri
+        os = @conf['sequel_options'] || @conf['db_options'] || {}
+        Sequel.connect(@uri, os)
+      else
+        @ganger.unit.storage.db
+      end
     end
 
     def store_task(rname, rtype, message, opts={})
@@ -25,6 +24,10 @@ module Florist
       typ = opts[:assignment_type] || opts[:type] || ''
       ame = opts[:assignment_meta] || opts[:meta]
       ast = opts[:assignment_status] || 'active'
+
+      ti = nil
+
+      db = get_db
 
       db.transaction do
 
@@ -48,9 +51,11 @@ module Florist
             ctime: now,
             mtime: now,
             status: ast)
-
-        ti
       end
+
+      db.disconnect if @uri
+
+      ti
     end
   end
 

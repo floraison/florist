@@ -73,7 +73,7 @@ module Helpers
   def storage_uri(key=nil)
 
     if key
-      "#{jruby? ? 'jdbc:' : ''}sqlite:://tmp/florist_#{key}_test.db"
+      "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/florist_#{key}_test.db"
     else
       jruby? ? 'jdbc:sqlite://tmp/florist_test.db' : 'sqlite::memory:'
     end

@@ -27,7 +27,7 @@ module Florist
           File.dirname(__FILE__), 'florist/migrations'))
     end
 
-    def delete_tables(db_or_db_uri)
+    def delete_tables(db_or_db_uri, opts={})
 
       db =
         db_or_db_uri.is_a?(String) ?

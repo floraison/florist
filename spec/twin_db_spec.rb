@@ -14,8 +14,6 @@ describe 'florist' do
 
     @uri0 = storage_uri(:zero)
     @uri1 = storage_uri(:one)
-p @uri0
-p @uri1
 
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
@@ -26,15 +24,8 @@ p @uri1
     @unit.storage.migrate
     @unit.start
 
-    @db1 = Sequel.connect(@uri1)
-
-    Florist.delete_tables(@db1)
-    Florist.migrate(@db1)
-p Dir['tmp/*.db']
-p @unit.storage.db.tables
-p Sequel.connect(@uri0).tables
-p @db1.tables
-p Sequel.connect(@uri1).tables
+    Florist.delete_tables(@uri1)
+    Florist.migrate(@uri1)
 
     @unit.add_tasker(
       'alice',
@@ -59,8 +50,13 @@ p Sequel.connect(@uri1).tables
       expect(r['point']).to eq('task')
       expect(r['tasker']).to eq('alice')
 
-      expect(@db0[:flor_executions].count).to eq(1)
-      expect(@db1[:florist_tasks].count).to eq(1)
+      db0 = Sequel.connect(@uri0)
+      db1 = Sequel.connect(@uri1)
+
+      wait_until { db0[:flor_executions].count == 1 }
+
+      expect(db0[:flor_executions].count).to eq(1)
+      expect(db1[:florist_tasks].count).to eq(1)
     end
   end
 end
