@@ -105,8 +105,11 @@ class Florist::Task < ::Flor::FlorModel
     @assignment_model ||=
       Florist.assignments(db)
 
-    @assignments ||=
-      @assignment_model.where(task_id: id).all.each { |a| a.task = self }
+    @assignments ||= @assignment_model
+      .where(task_id: id)
+      .order(:ctime)
+      .all
+      .each { |a| a.task = self }
   end
 
   def assignment; assignments.first; end
@@ -166,11 +169,24 @@ class Florist::Task < ::Flor::FlorModel
 fail NotImplementedError
   end
 
-#  def assign(resource_type, resource_name)
-#
-#    db[:flor_task_assignments]
-#      .insert(
-#  end
+  def assign(resource_type, resource_name, opts={})
+
+    now = Flor.tstamp
+    typ = opts[:assignment_type] || opts[:type] || ''
+    ame = opts[:assignment_meta]
+    ast = opts[:assigmment_status] || opts[:status] || 'active'
+
+    db[:florist_task_assignments]
+      .insert(
+        task_id: id,
+        type: typ,
+        resource_type: resource_type,
+        resource_name: resource_name,
+        content: Florist.to_blob(ame),
+        ctime: now,
+        mtime: now,
+        status: ast)
+  end
 end
 
 class Florist::TaskAssignment < ::Flor::FlorModel

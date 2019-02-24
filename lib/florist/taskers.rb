@@ -19,38 +19,36 @@ module Florist
     def store_task(rname, rtype, message, opts={})
 
       now = Time.now
-      typ = opts[:type] || ''
-      sta = opts[:status] || 'created'
-      ame = opts[:assignment_meta]
+      sta = opts[:task_status] || opts[:status] || 'created'
+      typ = opts[:assignment_type] || opts[:type] || ''
+      ame = opts[:assignment_meta] || opts[:meta]
+      ast = opts[:assignment_status] || 'active'
 
       storage.transync do
 
-        ti = storage.db[:florist_tasks].insert(
-          domain: Flor.domain(exid),
-          exid: message['exid'],
-          nid: message['nid'],
-          content: to_blob(message),
-          ctime: now,
-          mtime: now,
-          status: sta)
+        ti = storage.db[:florist_tasks]
+          .insert(
+            domain: Flor.domain(exid),
+            exid: message['exid'],
+            nid: message['nid'],
+            content: Florist.to_blob(message),
+            ctime: now,
+            mtime: now,
+            status: sta)
 
-        storage.db[:florist_task_assignments].insert(
-          task_id: ti,
-          type: typ,
-          resource_name: rname,
-          resource_type: rtype,
-          content: to_blob(ame),
-          ctime: now,
-          mtime: now,
-          status: 'active')
+        storage.db[:florist_task_assignments]
+          .insert(
+            task_id: ti,
+            type: typ,
+            resource_name: rname,
+            resource_type: rtype,
+            content: Florist.to_blob(ame),
+            ctime: now,
+            mtime: now,
+            status: ast)
 
         ti
       end
-    end
-
-    def to_blob(o)
-
-      o ? Flor::Storage.to_blob(message) : nil
     end
   end
 

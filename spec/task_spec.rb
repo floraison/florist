@@ -244,18 +244,25 @@ describe '::Florist' do
 
       describe '#assign' do
 
-        it 'adds new assignments for a task'
-#
-#          t = @unit.tasks.first
-#
-#          expect(@db[:florist_task_assignments].count).to eq(1)
-#          expect(t.assignments.count).to eq(1)
-#
-#          t.assign('group', 'accounting')
-#          t.assign('user', 'bob')
-#
-#          expect(@db[:florist_task_assignments].count).to eq(3)
-#        end
+        it 'adds new assignments for a task' do
+
+          t = @unit.tasks.first
+
+          expect(@db[:florist_task_assignments].count).to eq(1)
+          expect(t.assignments.count).to eq(1)
+
+          t.assign('group', 'accounting')
+          t.assign('user', 'bob')
+
+          expect(@db[:florist_task_assignments].count).to eq(3)
+
+          t = @unit.tasks.first
+
+          expect(t.assignments.map(&:resource_type))
+            .to eq(%w[ user group user ])
+          expect(t.assignments.map(&:resource_name))
+            .to eq(%w[ alice accounting bob ])
+        end
       end
 
       describe '#unassign' do
