@@ -169,7 +169,7 @@ class Florist::Task < ::Flor::FlorModel
     ame = opts[:assignment_meta]
     ast = opts[:assigmment_status] || opts[:status] || 'active'
 
-    db[:florist_task_assignments]
+    assignment_id = db[:florist_task_assignments]
       .insert(
         task_id: id,
         type: typ,
@@ -179,6 +179,11 @@ class Florist::Task < ::Flor::FlorModel
         ctime: now,
         mtime: now,
         status: ast)
+
+    @assignments = nil
+      # forces reload at next #assignments call
+
+    assignment_id
   end
 
   protected
