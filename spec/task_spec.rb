@@ -33,34 +33,13 @@ describe '::Florist' do
 
   describe '::Task' do
 
-    describe '.tasks' do
-
-      it 'creates a dedicated dataset' do
-
-        @unit.add_tasker('accounting', Florist::GroupTasker)
-        @unit.add_tasker('sales', Florist::GroupTasker)
-
-        exids = []
-
-        exids << @unit.launch(%q{ accounting _ }, wait: 'task')['exid']
-        exids << @unit.launch(%q{ sales _ }, wait: 'task')['exid']
-
-        wait_until { @db[:florist_tasks].count == 2 }
-
-        tds = Florist.tasks(@db)
-
-        expect(tds.count).to eq(2)
-        expect(tds.all.collect(&:exid).sort).to eq(exids.sort)
-      end
-    end
-
     context 'accessors' do
 
       before :each do
 
         @unit.add_tasker(
           'alice',
-          { class: Florist::UserTasker, include_vars: true })
+          { class: Florist::WorklistTasker, include_vars: true })
 
         @r = @unit.launch(
           %q{
@@ -200,178 +179,30 @@ describe '::Florist' do
 
     context 'actions' do
 
-      before :each do
-
-        @db = @unit.storage.db
-
-        @unit.add_tasker('alice', Florist::UserTasker)
-
-        @r = @unit.launch(%q{ alice _ }, wait: 'task')
-
-        wait_until { @unit.tasks.count == 1 }
-      end
-
-      describe '#return' do
-
-        it 'returns a task to its execution' do
-
-          t = @unit.tasks.first
-
-          t.payload['ret'] = 1234
-          t.payload['name'] = 'Alice'
-          t.return
-
-          r = @unit.wait(@r['exid'], 'terminated')
-
-          expect(r['point']).to eq('terminated')
-          expect(r['payload']['ret']).to eq(1234)
-          expect(r['payload']['name']).to eq('Alice')
-
-          expect(@unit.tasks.count).to eq(0)
-          expect(@unit.task_assignments.count).to eq(0)
-        end
-      end
-
-      describe '#return_error' do
-
-        it 'returns an error instead of the task' do
-
-          t = @unit.tasks.first
-
-          err = ArgumentError.new('pure fail')
-
-          t.return_error(err)
-
-          r = @unit.wait(@r['exid'], 'failed')
-
-          expect(r['m']).not_to eq(@r['m'])
-          expect(r['point']).to eq('failed')
-          expect(r['error']['kla']).to eq('ArgumentError')
-          expect(r['error']['msg']).to eq('pure fail')
-        end
-      end
-
-      describe '#reassign' do
-
-        it 'removes the current assignments and inserts new ones'
-      end
-
-      describe '#assign' do
-
-        it 'adds new assignments for a task' do
-
-          t = @unit.tasks.first
-
-          expect(t.assignments.count).to eq(1)
-
-          expect(@db[:florist_task_assignments].count).to eq(1)
-
-          t.assign('group', 'accounting')
-          t.assign('user', 'bob')
-
-          expect(t.assignments.count).to eq(3)
-
-          expect(@db[:florist_task_assignments].count).to eq(3)
-
-          t = @unit.tasks.first
-
-          expect(t.assignments.map(&:resource_type))
-            .to eq(%w[ user group user ])
-          expect(t.assignments.map(&:resource_name))
-            .to eq(%w[ alice accounting bob ])
-        end
-      end
-
-      describe '#unassign' do
-
-        it 'deletes all the assignments for the task'
-      end
+      # TODO reintroduce, but with the worklist (session) concept
     end
   end
 
   describe '::Task333 (dedicated dataset)' do
 
-    before :each do
+#    before :each do
+#
+#      @unit.add_tasker('accounting', Florist::GroupTasker)
+#      @unit.add_tasker('sales', Florist::GroupTasker)
+#      @unit.add_tasker('alice', Florist::UserTasker)
+#
+#      2.times do
+#        @unit.launch(%q{ accounting _ })
+#        @unit.launch(%q{ sales _ })
+#        @unit.launch(%q{ alice _ })
+#      end
+#
+#      wait_until { @db[:florist_tasks].count == 6 }
+#
+#      @tasks = Florist.tasks(@db)
+#    end
 
-      @unit.add_tasker('accounting', Florist::GroupTasker)
-      @unit.add_tasker('sales', Florist::GroupTasker)
-      @unit.add_tasker('alice', Florist::UserTasker)
-
-      2.times do
-        @unit.launch(%q{ accounting _ })
-        @unit.launch(%q{ sales _ })
-        @unit.launch(%q{ alice _ })
-      end
-
-      wait_until { @db[:florist_tasks].count == 6 }
-
-      @tasks = Florist.tasks(@db)
-    end
-
-    describe '#by_resource(name)' do
-
-      it 'returns the tasks assigned to the given resource' do
-
-        ts = @tasks.by_resource('accounting')
-
-        expect(ts.size).to eq(2)
-      end
-    end
-
-    describe '#by_resource(type, name)' do
-
-      it 'returns the tasks assigned to the given resource' do
-
-        ts = @tasks.by_resource('group', 'accounting')
-
-        expect(ts.size).to eq(2)
-      end
-    end
-
-    describe '#assigned_to' do
-
-      it 'is an alias to #by_resource' do
-
-        ts = @tasks.assigned_to('group', 'accounting')
-
-        expect(
-          ts.collect { |t| t.assignment.resource_type }
-        ).to eq(%w[ group ] * 2)
-        expect(
-          ts.collect { |t| t.assignment.resource_name }
-        ).to eq(%w[ accounting ] * 2)
-      end
-    end
-
-    describe '#by_assignment' do
-
-      it 'is an alias to #by_resource' do
-
-        ts = @tasks.by_assignment('group', 'accounting')
-
-        expect(
-          ts.collect { |t| t.assignment.resource_type }
-        ).to eq(%w[ group ] * 2)
-        expect(
-          ts.collect { |t| t.assignment.resource_name }
-        ).to eq(%w[ accounting ] * 2)
-      end
-    end
-
-    describe '#without_assignment' do
-
-      it 'lists the tasks missing and assignments'
-      it 'returns an empty array when all the task are assigned'
-      it 'returns an empty array when there are no tasks'
-    end
-  end
-
-  describe '::TaskAssignment999 (dedicated dataset)' do
-
-    describe '#orphans' do
-
-      it 'lists the assignments pointing to unknown tasks'
-    end
+    # TODO reintroduce, if necessary
   end
 end
 
