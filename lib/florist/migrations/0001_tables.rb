@@ -6,16 +6,28 @@ Sequel.migration do
     create_table :florist_tasks do
 
       primary_key :id
+
       String :domain, null: false
       String :exid, null: false
       String :nid, null: false
 
       File :content # JSON
-        # the task payload and more...
 
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
-      #String :atime, null: false  # archival time
+
+      index :domain
+      index :exid
+      index [ :exid, :nid ]
+
+      String :status, null: true  # could be useful at some point
+    end
+
+    create_table :florist_transitions do
+
+      primary_key :id
+
+      Integer :task_id
 
       String :status, null: false
         # http://www.workflowpatterns.com/patterns/resource/
@@ -27,35 +39,38 @@ Sequel.migration do
         # "failed"
         # "completed"
 
-      index :domain
-      index :exid
-      index [ :exid, :nid ]
-    end
-
-    create_table :florist_task_assignments do
-
-      primary_key :id
-
-      Integer :task_id, null: false
-      #foreign_key :task_id, :flor_tasks, on_delete: :cascade
-
-      String :type, null: false  # "", "forced", "automatic", "escalated", ...
-
-      String :resource_name, null: false  # "bob", "accounting"
-      String :resource_type, null: false  # "user", "group", ...
+      String :description, null: false
 
       File :content # JSON
-        # some metadata for this taskee/task pair
 
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
-      #String :atime, null: false  # archival time
-
-      String :status, null: false
-        # "active" / "archived"
 
       index :task_id
-      index :resource_name
+    end
+
+    create_table :florist_assignments do
+
+      primary_key :id
+
+      #Integer task_id, null: false
+      Integer transition_id, null: false
+
+      String :resource_type, null: false  # "user", "group", "role", ...
+      String :resource_name, null: false  # "bob", "accounting"
+
+      File :content # JSON
+
+      String :description, null: false
+
+      String :ctime, null: false  # creation time
+      String :mtime, null: false  # last modification time
+
+      String :status, null: false
+        # 'active' or something else
+
+      #index :task_id
+      index :transition_id
       index [ :resource_type, :resource_name ]
     end
   end
@@ -63,7 +78,8 @@ Sequel.migration do
   down do
 
     drop_table :florist_tasks
-    drop_table :florist_task_assignments
+    drop_table :florist_transitions
+    drop_table :florist_assignments
   end
 end
 
