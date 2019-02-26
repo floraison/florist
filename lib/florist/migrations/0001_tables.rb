@@ -1,6 +1,18 @@
 
 Sequel.migration do
 
+  # +------+
+  # | task |-1--+
+  # +------+    |
+  #             | 1 or more
+  #      +------+-----+
+  #      | transition |-1---+
+  #      +------------+     |
+  #                         | 0 or more
+  #                  +------+-----+
+  #                  | assignment |
+  #                  +------------+
+
   up do
 
     create_table :florist_tasks do
