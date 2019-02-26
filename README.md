@@ -10,6 +10,28 @@
 
 It aims to follow the guidance/conventions found at [http://www.workflowpatterns.com/patterns/resource/](http://www.workflowpatterns.com/patterns/resource/).
 
+```
+                                 +-----------+
+                                 | suspended |
+                                 +-----------+
+                                      ^ |
+                                      | |
+                                      | v
+  +---------+                   +---------+    +-----------+
+->| created |------------------>| started |--->| completed |
+  +---------+                   +---------+    +-----------+
+        | |                       ^ ^   |
+        | |    +--------------+   | |   |   +---------+
+        | \--->| allocated    |---/ |   \-->| failed  |
+        |      | (single res) |     |       +---------+
+        |      +--------------+     |
+        |                           |
+        |   +-----------------+     |
+        \-->| offered         |-----/
+            | (1 or more res) |
+            +-----------------+
+```
+
 
 ## Documentation
 
