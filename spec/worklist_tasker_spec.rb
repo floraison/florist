@@ -42,7 +42,7 @@ describe '::Florist' do
 
       r = @unit.launch(
         %q{
-          alice _
+          alice 1 'do this or that'
         },
         wait: 'task')
 
@@ -61,6 +61,9 @@ describe '::Florist' do
 
       expect(t[:exid]).to eq(r['exid'])
       expect(t[:nid]).to eq(r['nid'])
+      expect(t[:tasker]).to eq('alice')
+      expect(t[:taskname]).to eq('1')
+      expect(t[:attls1]).to eq('do this or that')
       expect(t[:content]).not_to eq(nil)
       expect(t[:ctime]).not_to eq(nil)
       expect(t[:mtime]).not_to eq(nil)

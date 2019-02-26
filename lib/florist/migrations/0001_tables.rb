@@ -26,6 +26,10 @@ Sequel.migration do
       String :exid, null: false
       String :nid, null: false
 
+      String :tasker, null: false   # msg['tasker']
+      String :taskname, null: true  # msg['taskname']
+      String :attls1, null: true    # (msg['attl'] || []).select(:string?)[1]
+
       File :content # JSON
         # contains the "task" message as received
 
