@@ -22,13 +22,13 @@ It aims to follow the guidance/conventions found at [http://www.workflowpatterns
    +---------+                  +---------+    +-----------+
          | |                      ^ ^   |
          | |   +--------------+   | |   |   +---------+
-         | \-->| allocated    |---/ |   \-->| failed  |
+         | `-->| allocated    |---' |   `-->| failed  |
          |     | (single res) |     |       +---------+
          |     +--------------+     |
          |        ^                 |
          |        |                 |
          |   +-----------------+    |
-         \-->| offered         |----/
+         `-->| offered         |----'
              | (1 or more res) |
              +-----------------+
 ```
