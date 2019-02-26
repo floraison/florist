@@ -1,9 +1,19 @@
 
 module Florist
 
-  class Tasker < ::Flor::BasicTasker
+  class WorklistTasker < ::Flor::BasicTasker
+
+    def task
+
+      store_task('user', message['tasker'], message)
+
+      []
+    end
 
     protected
+
+    # TODO [ ] @conf['allowed_overrides']
+    #          "state", ...
 
     def get_db
 
@@ -17,13 +27,24 @@ module Florist
       end
     end
 
-    def store_task(rname, rtype, message, opts={})
+    def opt_or_conf(key, default)
+
+      default # FIXME
+    end
+
+    def store_task(rtype, rname, message, opts={})
 
       now = Time.now
-      sta = opts[:task_status] || opts[:status] || 'created'
-      typ = opts[:assignment_type] || opts[:type] || ''
-      ame = opts[:assignment_meta] || opts[:meta]
-      ast = opts[:assignment_status] || 'active'
+      exi = message['exid']
+      dom = Flor.domain(exi)
+      sta = opt_or_conf(:state, 'created')
+      rty = opt_or_conf(:resource_type, 'user')
+      rna = opt_or_conf(:resource_name, message['tasker'])
+
+      #sta = opts[:task_status] || opts[:status] || 'created'
+      #typ = opts[:assignment_type] || opts[:type] || ''
+      #ame = opts[:assignment_meta] || opts[:meta]
+      #ast = opts[:assignment_status] || 'active'
 
       ti = nil
 
@@ -33,49 +54,40 @@ module Florist
 
         ti = db[:florist_tasks]
           .insert(
-            domain: Flor.domain(exid),
-            exid: message['exid'],
+            domain: dom,
+            exid: exi,
             nid: message['nid'],
             content: Florist.to_blob(message),
             ctime: now,
             mtime: now,
-            status: sta)
+            status: nil)
 
-        db[:florist_task_assignments]
+        si = db[:florist_transitions]
           .insert(
             task_id: ti,
-            type: typ,
-            resource_name: rname,
-            resource_type: rtype,
-            content: Florist.to_blob(ame),
+            state: sta,
+            description: nil,
+            user: '(flor)',
+            domain: dom,
+            content: nil,
+            ctime: now,
+            mtime: now)
+
+        db[:florist_assignments]
+          .insert(
+            transition_id: si,
+            resource_type: rty,
+            resource_name: rna,
+            content: nil,
+            description: nil,
             ctime: now,
             mtime: now,
-            status: ast)
+            status: 'active')
       end
 
       db.disconnect if @uri
 
       ti
-    end
-  end
-
-  class UserTasker < Tasker
-
-    def task
-
-      store_task(message['tasker'], 'user', message)
-
-      []
-    end
-  end
-
-  class GroupTasker < Tasker
-
-    def task
-
-      store_task(message['tasker'], 'group', message)
-
-      []
     end
   end
 end

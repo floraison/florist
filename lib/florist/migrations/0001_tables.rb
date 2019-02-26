@@ -1,10 +1,10 @@
 
 Sequel.migration do
 
-  # +------+
-  # | task |-1--+
-  # +------+    |
-  #             | 1 or more
+  # +------+                             * a task is in the state of its
+  # | task |-1--+                          last transition
+  # +------+    |                        * a transition may have 0 or more
+  #             | 1 or more                assignments
   #      +------+-----+
   #      | transition |-1---+
   #      +------------+     |
@@ -27,15 +27,16 @@ Sequel.migration do
       String :nid, null: false
 
       File :content # JSON
+        # contains the "task" message as received
 
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
 
+      String :status, null: true  # could be useful at some point
+
       index :domain
       index :exid
       index [ :exid, :nid ]
-
-      String :status, null: true  # could be useful at some point
     end
 
     create_table :florist_transitions do
@@ -44,7 +45,7 @@ Sequel.migration do
 
       Integer :task_id
 
-      String :status, null: false
+      String :state, null: false
         # http://www.workflowpatterns.com/patterns/resource/
         # "created"
         # "offered"
@@ -54,12 +55,13 @@ Sequel.migration do
         # "failed"
         # "completed"
 
-      String :description, null: false
+      String :description
 
       String :user    # who ordered the transition
       String :domain  # level of authority for the transition[er]
 
       File :content # JSON
+        # contains the updated payload (not the whole message) or null
 
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
@@ -79,7 +81,7 @@ Sequel.migration do
 
       File :content # JSON
 
-      String :description, null: false
+      String :description
 
       String :ctime, null: false  # creation time, Flor.tstamp
       String :mtime, null: false  # last modification time, Flor.tstamp
