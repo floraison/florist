@@ -12,8 +12,8 @@ describe 'florist' do
 
   before :each do
 
-    @uri0 = storage_uri(:zero)
-    @uri1 = storage_uri(:one)
+    @uri0 = storage_uri(:zero, delete: true)
+    @uri1 = storage_uri(:one, delete: true)
 
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
@@ -29,7 +29,7 @@ describe 'florist' do
 
     @unit.add_tasker(
       'alice',
-      class: Florist::UserTasker, db_uri: @uri1)
+      class: Florist::WorklistTasker, db_uri: @uri1)
   end
 
   after :each do
