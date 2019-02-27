@@ -169,4 +169,6 @@ end
 Flor.add_model(:tasks, Florist, 'florist_')
 Flor.add_model(:transitions, Florist, 'florist_')
 Flor.add_model(:assignments, Florist, 'florist_')
+  #
+  # So that `@unit.tasks` et al can be called
 

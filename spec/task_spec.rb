@@ -79,20 +79,20 @@ describe '::Florist' do
         end
       end
 
-      describe '#assignments' do
-
-        it 'lists the task assignments' do
-
-          t = @unit.tasks.first
-
-          expect(t.assignments.size).to eq(1)
-
-          a = t.assignments.first
-
-          expect(a.task_id).to eq(t.id)
-          expect(a.task.id).to eq(t.id)
-        end
-      end
+#      describe '#assignments' do
+#
+#        it 'lists the task assignments' do
+#
+#          t = @unit.tasks.first
+#
+#          expect(t.assignments.size).to eq(1)
+#
+#          a = t.assignments.first
+#
+#          expect(a.task_id).to eq(t.id)
+#          expect(a.task.id).to eq(t.id)
+#        end
+#      end
 
       describe '#attl / #atts / #atta' do
 
