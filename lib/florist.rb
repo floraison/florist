@@ -7,8 +7,12 @@ end
 require 'flor'
 require 'flor/unit'
 
+require 'florist/errors'
+
 require 'florist/task'
+
 require 'florist/taskers'
+require 'florist/list'
 
 
 module Florist

@@ -22,6 +22,12 @@ describe '::Florist' do
     @unit.storage.delete_tables
     @unit.storage.migrate
     @unit.start
+
+    @unit.add_tasker('alice', Florist::WorklistTasker)
+
+    @unit.launch(%q{ alice _ })
+
+    wait_until { @unit.storage.db[:florist_tasks].count == 1 }
   end
 
   after :each do
@@ -33,12 +39,24 @@ describe '::Florist' do
 
     describe '.initialize(db, conf)' do
 
-      it 'instantiates a worklist'
+      it 'instantiates a worklist' do
+
+        l = Florist::Worklist.new(@unit.storage.db)
+
+        expect(l.tasks.count).to eq(1)
+        expect(l.tasks.first.class.ancestors).to include(Sequel::Model)
+      end
     end
 
     describe '.initialize(unit)' do
 
-      it 'instantiates a worklist'
+      it 'instantiates a worklist' do
+
+        l = Florist::Worklist.new(@unit)
+
+        expect(l.tasks.count).to eq(1)
+        expect(l.tasks.first.class.ancestors).to include(Sequel::Model)
+      end
     end
 
 #    it 'may directly allocate to a user' do
