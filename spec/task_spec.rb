@@ -54,6 +54,37 @@ describe '::Florist' do
         wait_until { @unit.executions.count == 1 }
       end
 
+      describe '#tasker' do
+
+        it 'returns the tasker as indicated in the execution' do
+
+          t = @unit.tasks.first
+
+          expect(t.tasker).to eq('alice')
+        end
+      end
+
+      describe '#taskname / #task_name' do
+
+        it 'returns the name of the task' do
+
+          t = @unit.tasks.first
+
+          expect(t.taskname).to eq('send message')
+          expect(t.task_name).to eq('send message')
+        end
+      end
+
+      describe '#attls1' do
+
+        it 'returns the second string attribute in the attl' do
+
+          t = @unit.tasks.first
+
+          expect(t.attls1).to eq('send message')
+        end
+      end
+
       describe '#message' do
 
         it 'returns the original message' do
@@ -117,27 +148,6 @@ describe '::Florist' do
         end
       end
 
-      describe '#tasker' do
-
-        it 'returns the tasker as indicated in the execution' do
-
-          t = @unit.tasks.first
-
-          expect(t.tasker).to eq('alice')
-        end
-      end
-
-      describe '#taskname / #task_name' do
-
-        it 'returns the name of the task' do
-
-          t = @unit.tasks.first
-
-          expect(t.taskname).to eq('send message')
-          expect(t.task_name).to eq('send message')
-        end
-      end
-
       describe '#vars / #vard' do
 
         it 'returns the var dictionary coming with the task' do
@@ -175,6 +185,11 @@ describe '::Florist' do
           )
         end
       end
+    end
+
+    context 'graph' do
+
+      # #assignment...
     end
 
     context 'actions' do

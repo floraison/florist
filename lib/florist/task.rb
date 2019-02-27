@@ -14,10 +14,7 @@ class Florist::Task < ::Florist::FloristModel
 
   alias message data
 
-  def tasker; message['tasker']; end
-
-  def taskname; message['taskname']; end
-  alias task_name taskname
+  def task_name; taskname; end
 
   def attl; message['attl']; end
   alias atta attl
@@ -42,19 +39,6 @@ class Florist::Task < ::Florist::FloristModel
   def vars; message['vars']; end
   alias vard vars
 
-#  def assignments
-#
-#    @assignment_model ||=
-#      Florist.assignments(db)
-#
-#    @assignments ||= @assignment_model
-#      .where(task_id: id)
-#      .order(:ctime)
-#      .all
-#      .each { |a| a.task = self }
-#  end
-#  def assignment; assignments.first; end
-
   def execution
 
     return nil unless db.table_exists?(:flor_executions)
@@ -68,6 +52,22 @@ class Florist::Task < ::Florist::FloristModel
 
     @execution_class[exid: exid]
   end
+
+  #
+  # 'graph' methods
+
+#  def assignments
+#
+#    @assignment_model ||=
+#      Florist.assignments(db)
+#
+#    @assignments ||= @assignment_model
+#      .where(task_id: id)
+#      .order(:ctime)
+#      .all
+#      .each { |a| a.task = self }
+#  end
+#  def assignment; assignments.first; end
 
   #
   # actions
