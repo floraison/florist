@@ -34,7 +34,7 @@ module Florist
 
     def store_task(rtype, rname, message, opts={})
 
-      now = Time.now
+      now = Flor.tstamp
       exi = message['exid']
       dom = Flor.domain(exi)
       sta = opt_or_conf(:state, 'created')
