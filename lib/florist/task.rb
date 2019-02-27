@@ -1,25 +1,13 @@
 
-module Florist
+class Florist::FloristModel < ::Flor::FlorModel
 
   class << self
 
-#    def tasks(db)
-#
-#      Class.new(Florist::Task) do
-#        self.dataset = db[:florist_tasks]
-#      end
-#    end
-#
-#    def assignments(db)
-#
-#      Class.new(Florist::TaskAssignment) do
-#        self.dataset = db[:florist_task_assignments]
-#      end
-#    end
+    attr_accessor :worklist
   end
 end
 
-class Florist::Task < ::Flor::FlorModel
+class Florist::Task < ::Florist::FloristModel
 
   #
   # accessors et al
