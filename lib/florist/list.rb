@@ -3,7 +3,14 @@ class Florist::Worklist
 
   attr_reader :db, :unit
 
+  # Florist::Worklist.new(db)
+  # Florist::Worklist.new(flor_unit)
+  # Florist::Worklist.new(db, flor_db: flor_db)
+  # Florist::Worklist.new(db, flor_db_uri: flor_db)
+  #
   def initialize(db_or_unit_or_uri, opts={})
+
+    # TODO track florist db and flor db (for queueing messages back)
 
     @db, @unit =
       case duu = db_or_unit_or_uri
@@ -70,6 +77,38 @@ class Florist::Worklist
       else
         Florist::Controller.new(self)
       end
+  end
+
+  def queue_message(msg)
+
+    # TODO case where florist db != flor db
+
+    now = Flor.tstamp
+
+    db.transaction do
+      #
+      # the florist db operations involve 3 florist tables
+      # while the flor db operation involves 1
+      # use the florist db transaction
+
+      # TODO archive florist rows?
+
+      sq = db[:florist_transitions].where(task_id: id)
+
+      tc = db[:florist_tasks].where(id: id).delete
+      ac = db[:florist_assignments].where(transition_id: sq.select(:id)).delete
+      sc = sq.delete
+
+      flor_db[:flor_messages]
+        .insert(
+          domain: domain,
+          exid: exid,
+          point: 'return',
+          content: Flor::Storage.to_blob(msg),
+          status: 'created',
+          ctime: now,
+          mtime: now)
+    end
   end
 end
 

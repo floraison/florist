@@ -37,9 +37,9 @@ describe 'florist' do
     @unit.shutdown
   end
 
-  context 'execution db vs task db' do
+  context 'flor db vs florist db' do
 
-    it 'works' do
+    it 'stores tasks in a separate database' do
 
       r = @unit.launch(
         %q{

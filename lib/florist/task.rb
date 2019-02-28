@@ -70,7 +70,7 @@ class Florist::Task < ::Florist::FloristModel
 #  def assignment; assignments.first; end
 
   #
-  # actions
+  # transition 'methods'
 
 #  def return(opts={})
 #
@@ -128,32 +128,6 @@ class Florist::Task < ::Florist::FloristModel
 #  end
 
   protected
-
-  def queue_message(msg)
-
-    now = Flor.tstamp
-
-    db.transaction do
-
-      sq = db[:florist_transitions].where(task_id: id)
-
-      tc = db[:florist_tasks].where(id: id).delete
-      ac = db[:florist_assignments].where(transition_id: sq.select(:id)).delete
-      sc = sq.delete
-
-      db[:flor_messages]
-        .insert(
-          domain: domain,
-          exid: exid,
-          point: 'return',
-          content: Flor::Storage.to_blob(msg),
-          status: 'created',
-          ctime: now,
-          mtime: now)
-
-      tc
-    end
-  end
 end
 
 class Florist::Transition < ::Flor::FlorModel
