@@ -27,9 +27,20 @@ module Florist
       end
     end
 
-    def opt_or_conf(key, default)
+    def opt_or_conf(key, default=nil)
 
-      default # FIXME
+      k = key.to_s
+
+      os = @conf['allowed_overrides'] || @conf['allow_override'] || []
+      ad = @message['attd']
+
+      if os.include?(k) && ad.has_key?(k)
+        ad[k]
+      elsif @conf.has_key?(k)
+        @conf[k]
+      else
+        default
+      end
     end
 
     def store_task(rtype, rname, message, opts={})
@@ -38,13 +49,8 @@ module Florist
       exi = message['exid']
       dom = Flor.domain(exi)
       sta = opt_or_conf(:state, 'created')
-      rty = opt_or_conf(:resource_type, 'user')
-      rna = opt_or_conf(:resource_name, message['tasker'])
-
-      #sta = opts[:task_status] || opts[:status] || 'created'
-      #typ = opts[:assignment_type] || opts[:type] || ''
-      #ame = opts[:assignment_meta] || opts[:meta]
-      #ast = opts[:assignment_status] || 'active'
+      rty = opt_or_conf(:resource_type)
+      rna = opt_or_conf(:resource_name, rty ? message['tasker'] : nil)
 
       ti = nil
 
@@ -85,7 +91,8 @@ module Florist
             description: nil,
             ctime: now,
             mtime: now,
-            status: 'active')
+            status: 'active'
+        ) if rty
       end
 
       db.disconnect if @uri

@@ -31,6 +31,36 @@ describe '::Florist' do
 
   describe '::WorklistTasker' do
 
+    context 'by default' do
+
+      it 'inserts a "created" task' do
+
+        @unit.add_tasker(
+          'alice',
+          Florist::WorklistTasker)
+
+        r = @unit.launch(
+          %q{
+            alice _
+          },
+          wait: 'task')
+
+        expect(r['point']).to eq('task')
+
+        ts = @unit.storage.db[:florist_tasks].all
+        ss = @unit.storage.db[:florist_transitions].all
+        as = @unit.storage.db[:florist_assignments].all
+
+        expect(ts.size).to eq(1)
+        expect(ss.size).to eq(1)
+        expect(as.size).to eq(0)
+
+        t, s = ts.first, ss.first
+
+        expect(s[:state]).to eq('created')
+      end
+    end
+
     it 'may directly allocate to a user' do
 
       @unit.add_tasker(
@@ -71,7 +101,7 @@ describe '::Florist' do
 
       expect(s[:task_id]).to eq(t[:id])
       expect(s[:content]).to eq(nil)
-      expect(s[:state]).not_to eq('allocated')
+      expect(s[:state]).to eq('allocated')
       expect(s[:ctime]).to eq(t[:ctime])
       expect(s[:mtime]).to eq(t[:ctime])
 
@@ -86,6 +116,11 @@ describe '::Florist' do
       m = Flor::Storage.from_blob(t[:content])
       expect(m['point']).to eq('task')
       expect(m['m']).to eq(r['m'])
+    end
+
+    context "@conf['allowed_overrides']" do
+
+      it 'lets override conf from the execution'
     end
   end
 end
