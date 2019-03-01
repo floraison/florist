@@ -120,7 +120,47 @@ describe '::Florist' do
 
     context "@conf['allowed_overrides']" do
 
-      it 'lets override conf from the execution'
+      it 'lets override conf from the execution' do
+
+        @unit.add_tasker(
+          'alice',
+          class: Florist::WorklistTasker,
+          overrides: %w[ state resource_type resource_name ])
+
+        r = @unit.launch(
+          %q{
+            alice 'heavy one' state: 'allocated' rtype: 'user' rname: 'Alice'
+          },
+          wait: 'task')
+
+        expect(r['point']).to eq('task')
+        expect(r['tasker']).to eq('alice')
+
+        ts = @unit.storage.db[:florist_tasks].all
+        ss = @unit.storage.db[:florist_transitions].all
+        as = @unit.storage.db[:florist_assignments].all
+
+        expect(ts.size).to eq(1)
+        expect(ss.size).to eq(1)
+        expect(as.size).to eq(1)
+
+        t, s, a = ts.first, ss.first, as.first
+
+        expect(t[:exid]).to eq(r['exid'])
+        expect(t[:nid]).to eq(r['nid'])
+        expect(t[:tasker]).to eq('alice')
+        expect(t[:taskname]).to eq('heavy one')
+        expect(t[:attls1]).to eq('heavy one')
+        expect(t[:content]).not_to eq(nil)
+        expect(t[:status]).to eq(nil)
+
+        expect(s[:task_id]).to eq(t[:id])
+        expect(s[:state]).to eq('allocated')
+
+        expect(a[:transition_id]).to eq(s[:id])
+        expect(a[:resource_type]).to eq('user')
+        expect(a[:resource_name]).to eq('Alice')
+      end
     end
   end
 end
