@@ -61,9 +61,9 @@ module Florist
       now = Flor.tstamp
       exi = message['exid']
       dom = Flor.domain(exi)
-      sta = opt_or_conf(:state, 'created')
       rty = opt_or_conf(:resource_type, :rtype, nil)
       rna = rty ? opt_or_conf(:resource_name, :rname, message['tasker']) : nil
+      sta = opt_or_conf(:state, rty ? 'offered' : 'created')
 
       ti = nil
 
