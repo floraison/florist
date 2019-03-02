@@ -193,7 +193,7 @@ class Florist::Worklist
           domain: domain,
           exid: exid,
           point: 'return',
-          content: Flor::Storage.to_blob(msg),
+          content: Flor.to_blob(msg),
           status: 'created',
           ctime: now,
           mtime: now)

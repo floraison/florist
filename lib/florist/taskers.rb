@@ -76,7 +76,7 @@ module Florist
             tasker: message['tasker'],
             taskname: message['taskname'],
             attls1: (message['attl'] || []).select { |e| e.is_a?(String) }[1],
-            content: Florist.to_blob(message),
+            content: Flor.to_blob(message),
             ctime: now,
             mtime: now,
             status: 'active')

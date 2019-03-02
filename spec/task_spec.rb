@@ -231,7 +231,18 @@ describe '::Florist' do
 
       describe '#transitions' do
 
-        it 'returns all the transitions seen by the task'
+        it 'returns all the transitions seen by the task' do
+
+          t = @worklist.tasks.first
+
+          t.allocate('role', 'rm')
+          t.allocate('user', 'bob')
+
+          ss = t.transitions
+
+          expect(ss.collect(&:state)).to eq(%w[ created allocated ])
+#pp ss.collect { |s| s.assignments.collect(&:to_h) }
+        end
       end
 
       describe '#assignments, #current_assignments' do

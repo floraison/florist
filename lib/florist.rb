@@ -19,11 +19,6 @@ module Florist
 
   class << self
 
-    def to_blob(o)
-
-      o ? Flor::Storage.to_blob(o) : nil
-    end
-
     def migration_dir
 
       File.absolute_path(

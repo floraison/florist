@@ -69,6 +69,14 @@ class Florist::Task < ::Florist::FloristModel
 
   alias transition last_transition
 
+  def transitions
+
+    worklist.transition_table
+      .where(task_id: id)
+      .order(:id)
+      .all
+  end
+
   #
   # transition 'methods'
 
@@ -126,7 +134,7 @@ class Florist::Task < ::Florist::FloristModel
 #        type: typ,
 #        resource_type: resource_type,
 #        resource_name: resource_name,
-#        content: Florist.to_blob(ame),
+#        content: Flor.to_blob(ame),
 #        ctime: now,
 #        mtime: now,
 #        status: ast)
