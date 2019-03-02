@@ -380,8 +380,72 @@ describe '::Florist' do
 
       describe '#transition_to_offered / #offer' do
 
-        it 'offers the task to a user'
-        it 'offers the task to 1 or more users'
+        it 'offers the task to a user' do
+
+          t = @worklist.task_table.first
+
+          expect(t.state).to eq('created')
+
+          t.offer('user', 'charly')
+          t.refresh
+
+          expect(t.state).to eq('offered')
+
+          as = t.assignments
+
+          expect(as.size).to eq(1)
+
+          a = t.assignment
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('charly')
+        end
+
+        it 'offers the task to 1 or more users' do
+
+          t = @worklist.task_table.first
+
+          t.offer([ 'user', 'charly' ], [ 'user', 'david' ])
+          t.refresh
+
+          expect(t.state).to eq('offered')
+
+          as = t.assignments
+
+          expect(as.size).to eq(2)
+
+          a = t.assignment
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('charly')
+
+          expect(as[0].rtype).to eq('user')
+          expect(as[0].rname).to eq('charly')
+          expect(as[1].rtype).to eq('user')
+          expect(as[1].rname).to eq('david')
+        end
+
+        it 'offers the task to 1 or more users (2)' do
+
+          t = @worklist.task_table.first
+
+          t.offer(
+            { rtype: 'user', rname: 'eve' },
+            { resource_type: 'user', resource_name: 'frodo' },
+            {}) # force opts as last elt
+          t.refresh
+
+          expect(t.state).to eq('offered')
+
+          as = t.assignments
+
+          expect(as.size).to eq(2)
+
+          expect(as[0].rtype).to eq('user')
+          expect(as[0].rname).to eq('eve')
+          expect(as[1].rtype).to eq('user')
+          expect(as[1].rname).to eq('frodo')
+        end
       end
     end
   end
