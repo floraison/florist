@@ -111,6 +111,21 @@ class Florist::Task < ::Florist::FloristModel
       .all
   end
 
+  def state
+
+    last_transition.state
+  end
+
+  def assignment
+
+    last_transition.assignment
+  end
+
+  def assignments
+
+    last_transition.assignments
+  end
+
   #
   # transition 'methods'
 
@@ -247,9 +262,8 @@ class Florist::Task < ::Florist::FloristModel
   end
 end
 
-class Florist::Transition < ::Florist::FloristModel
 
-  #attr_accessor :task
+class Florist::Transition < ::Florist::FloristModel
 
   def assignments
 
@@ -265,10 +279,13 @@ class Florist::Transition < ::Florist::FloristModel
   end
 end
 
+
 class Florist::Assignment < ::Florist::FloristModel
 
-  #attr_accessor :task
+  def rtype; resource_type; end
+  def rname; resource_name; end
 end
+
 
 Flor.add_model(:tasks, Florist, 'florist_')
 Flor.add_model(:transitions, Florist, 'florist_')

@@ -132,6 +132,18 @@ describe '::Florist' do
           expect(t.vard).to eq({ 'v0' => 'hello', 'v1' => 2345 })
         end
       end
+    end
+
+    context 'environment accessors' do
+
+      before :each do
+
+        @unit.add_tasker('eve', Florist::WorklistTasker)
+
+        @r = @unit.launch(%q{ eve 'prepare ground' }, wait: 'task')
+
+        wait_until { @worklist.tasks.count == 1 }
+      end
 
       describe '#execution' do
 
@@ -153,9 +165,9 @@ describe '::Florist' do
           expect(x.exid).to eq(t.exid)
 
           expect(
-            x.data['nodes']['0_2']['payload']
+            x.data['nodes']['0']['task']
           ).to eq(
-            { 'kilroy' => 'was here', 'ret' => nil }
+            { 'tasker' => 'eve', 'name' => 'prepare ground' }
           )
         end
       end
@@ -168,32 +180,6 @@ describe '::Florist' do
 
           expect(t.class.worklist).to eq(@worklist)
           expect(t.worklist).to eq(@worklist)
-        end
-      end
-
-      describe '#payload / #fields' do
-
-        it 'returns the current payload' do
-
-          t = @worklist.tasks.first
-
-          expect(t.payload).to eq({ 'kilroy' => 'was here', 'ret' => nil })
-          expect(t.payload).to eq(@r['payload'])
-          expect(t.fields).to eq(@r['payload'])
-        end
-
-        it 'returns the latest payload' do
-
-          t = @worklist.tasks.first
-
-          c = t.push_payload(:kilroy => 'was there')
-
-          expect(c.size).to eq(1)
-          expect(c.first.keys).to eq(%w[ tstamp payload ])
-
-          t = @worklist.tasks.first
-
-          expect(t.payload).to eq({ 'kilroy' => 'was there' })
         end
       end
     end
@@ -261,19 +247,142 @@ describe '::Florist' do
           ss = t.transitions
 
           expect(ss.collect(&:state)).to eq(%w[ created allocated ])
-#pp ss.collect { |s| s.assignments.collect(&:to_h) }
+        end
+      end
+
+      describe '#payload / #fields' do
+
+        it 'returns the current payload' do
+
+          t = @worklist.tasks.first
+
+          expect(t.payload).to eq({ 'ret' => 'send message' })
+          expect(t.payload).to eq(@r['payload'])
+          expect(t.fields).to eq(@r['payload'])
+        end
+
+        it 'returns the latest payload' do
+
+          t = @worklist.tasks.first
+
+          c = t.push_payload(:kilroy => 'was there')
+
+          expect(c.size).to eq(1)
+          expect(c.first.keys).to eq(%w[ tstamp payload ])
+
+          t = @worklist.tasks.first
+
+          expect(t.payload).to eq({ 'kilroy' => 'was there' })
+        end
+      end
+
+      describe '#state' do
+
+        it 'returns the current state (transition.state)' do
+
+          t = @worklist.tasks.first
+
+          expect(t.state).to eq('created')
+        end
+      end
+
+      describe '#assignment' do
+
+        it 'returns nil if there are no assignments' do
+
+          t = @worklist.task_table.first
+
+          expect(t.assignment).to eq(nil)
+        end
+
+        it 'returns the first current assignment' do
+
+          t = @worklist.task_table.first
+
+          t.offer('user', 'warwick')
+          t.refresh
+          t.offer('user', 'percy')
+          t.refresh
+
+          a = t.assignment
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('warwick')
         end
       end
 
       describe '#assignments, #current_assignments' do
 
-        it 'returns the current assignments for the task'
+        it 'returns [] if none' do
+
+          t = @worklist.task_table.first
+
+          expect(t.assignments).to eq([])
+        end
+
+        it 'returns the current assignments' do
+
+          t = @worklist.task_table.first
+
+          t.offer('user', 'warwick')
+          t.refresh
+          t.offer('user', 'percy')
+          t.refresh
+
+          as = t.assignments
+
+          expect(as[0].rtype).to eq('user')
+          expect(as[0].rname).to eq('warwick')
+          expect(as[1].rtype).to eq('user')
+          expect(as[1].rname).to eq('percy')
+        end
       end
     end
 
     context 'actions' do
 
-      # TODO reintroduce, but with the worklist (session) concept
+      before :each do
+
+        @unit.add_tasker(
+          'bob',
+          Florist::WorklistTasker)
+
+        @r = @unit.launch(
+          %q{
+            bob 'send message'
+          },
+          wait: 'task')
+
+        wait_until { @worklist.tasks.count == 1 }
+      end
+
+      describe '#transition_to_allocated / #allocate' do
+
+        it 'adds an "allocated" transition to the task' do
+
+          t = @worklist.task_table.first
+
+          expect(t.state).to eq('created')
+
+          t.allocate('user', 'charly')
+          t.refresh
+
+          expect(t.state).to eq('allocated')
+
+          a = t.assignment
+          as = t.assignments
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('charly')
+          expect(as.size).to eq(1)
+        end
+      end
+
+      describe '#transition_to_offered / #offer' do
+
+        it 'offers the task to a user'
+        it 'offers the task to 1 or more users'
+      end
     end
   end
 end
