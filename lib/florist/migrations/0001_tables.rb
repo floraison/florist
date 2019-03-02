@@ -12,9 +12,6 @@ Sequel.migration do
   #                  +------+-----+
   #                  | assignment |
   #                  +------------+
-  # +-------+
-  # | right |
-  # +-------+
 
   up do
 
@@ -97,33 +94,6 @@ Sequel.migration do
       index :transition_id
       index [ :resource_type, :resource_name ]
     end
-
-    create_table :florist_rights do
-
-      primary_key :id
-
-      String :user, null: false  # "user123", "bob", "3456", ...
-
-      String :right, null: false
-        # "browse", "offer", "allocate", "start", "suspend"
-      String :statuses, null: false
-        # "created|offered", "allocated", ...
-
-      String :domain, null: false
-        # null ==> any domain
-
-      String :resource_type, null: true  # "user", "group", "role", ...
-      String :resource_name, null: true  # "bob", "accounting"
-        # null ==> any resource
-
-      String :ctime, null: false  # creation time, Flor.tstamp
-      String :mtime, null: false  # last modification time, Flor.tstamp
-
-      String :status, null: false
-        # "active" or something else
-
-      index [ :resource_type, :resource_name ]
-    end
   end
 
   down do
@@ -131,8 +101,6 @@ Sequel.migration do
     drop_table :florist_tasks
     drop_table :florist_transitions
     drop_table :florist_assignments
-
-    drop_table :florist_rights
   end
 end
 
