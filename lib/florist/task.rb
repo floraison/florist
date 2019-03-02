@@ -5,6 +5,8 @@ class Florist::FloristModel < ::Flor::FlorModel
 
     attr_accessor :worklist
   end
+
+  def worklist; self.class.worklist; end
 end
 
 class Florist::Task < ::Florist::FloristModel
@@ -53,14 +55,11 @@ class Florist::Task < ::Florist::FloristModel
     @execution_class[exid: exid]
   end
 
-  def worklist; self.class.worklist; end
-
   #
   # 'graph' methods
 
   def last_transition
 
-puts worklist.transition_table.where(task_id: id).reverse(:id).limit(1).sql
     worklist.transition_table
       .where(task_id: id)
       .reverse(:id)
@@ -72,6 +71,16 @@ puts worklist.transition_table.where(task_id: id).reverse(:id).limit(1).sql
 
   #
   # transition 'methods'
+
+  def offer(*as)
+
+    worklist.transition_to_offered(self, *as)
+  end
+
+  def allocate(*as)
+
+    worklist.transition_to_allocated(self, *as)
+  end
 
 #  def return(opts={})
 #
@@ -134,6 +143,19 @@ end
 class Florist::Transition < ::Florist::FloristModel
 
   #attr_accessor :task
+
+  def assignments
+
+    worklist.assignment_table
+      .where(transition_id: id)
+      .order(:id)
+      .all
+  end
+
+  def assignment
+
+    assignments.first
+  end
 end
 
 class Florist::Assignment < ::Florist::FloristModel

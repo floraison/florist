@@ -33,13 +33,13 @@ class Florist::Worklist
       make_model_class(Florist::Task, :florist_tasks)
     @transition_table =
       make_model_class(Florist::Transition, :florist_transitions)
-    #@assignment_class =
-    #  make_model_class(Florist::Assignment, :florist_assingments)
+    @assignment_table =
+      make_model_class(Florist::Assignment, :florist_assignments)
   end
 
   def task_table; @task_table; end
   def transition_table; @transition_table; end
-  #def assignment_table; @assignment_table; end
+  def assignment_table; @assignment_table; end
 
   def tasks(domain=nil, opts={})
 
@@ -47,6 +47,19 @@ class Florist::Worklist
 
     task_table.all
   end
+
+  def transition_to_offered(task_or_id, *as)
+
+    transition_and_or_assign(task_or_id, 'offered', *as)
+  end
+
+  def transition_to_allocated(task_or_id, *as)
+
+    transition_and_or_assign(task_or_id, 'allocated', *as)
+  end
+
+  alias offer transition_to_offered
+  alias allocate transition_to_allocated
 
   protected
 
@@ -81,6 +94,78 @@ class Florist::Worklist
       else
         Florist::Controller.new(self)
       end
+  end
+
+  def transition_and_or_assign(task_or_task_id, state, *as)
+
+    opts = as.last.is_a?(Hash) ? as.pop : {}
+    assignments = extract_assignments(as)
+
+    toti = task_or_task_id
+    tid = toti.is_a?(Integer) ? toti : toti.id
+
+    db.transaction do
+
+      now = Flor.tstamp
+
+      s = db[:florist_transitions]
+        .select(:id, :state, :domain)
+        .where(task_id: tid)
+        .reverse(:id)
+        .limit(1)
+        .first
+      sid = s[:id]
+
+      db[:florist_tasks].where(id: tid).update(mtime: now)
+
+      if s[:state] != state
+        # TODO create new transition
+        sid = db[:florist_transitions]
+          .insert(
+            task_id: tid,
+            state: state,
+            description: nil,
+            user: opts[:user] || '(florist)',
+            domain: s[:domain],
+            content: nil,
+            ctime: now,
+            mtime: now)
+      else
+        db[:florist_transitions].where(id: sid).update(mtime: now)
+      end
+
+      db[:florist_assignments]
+        .import(
+          [ :transition_id, :resource_type, :resource_name, :content,
+            :description, :ctime, :mtime, :status ],
+          assignments.map { |a|
+            [ sid, a[0], a[1], nil,
+              nil, now, now, 'active' ] }
+        ) if assignments.any?
+    end
+  end
+
+  def extract_assignments(as)
+
+    acs = as.collect(&:class)
+
+    if acs == [ String, String ]
+      [ as ]
+    elsif acs.uniq == [ Array ]
+      as
+        .collect { |a| [ a[0], a[1] ] }
+    elsif acs.uniq == [ Hash ]
+      as
+        .collect { |h|
+          h = Flor.to_string_keyed_hash(h)
+          t = h['resource_type'] || h['rtype'] || 'user'
+          n = h['resource_name'] || h['rname']
+          fail ArgumentErro.new("no resource_name in #{h.inspect}") unless n
+          [ t, n ] }
+    else
+      fail ArgumentError.new(
+        "couldn't figure out assignment list out of #{as.inspect}")
+    end
   end
 
   def queue_message(msg)

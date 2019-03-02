@@ -79,7 +79,7 @@ module Florist
             content: Florist.to_blob(message),
             ctime: now,
             mtime: now,
-            status: nil)
+            status: 'active')
 
         si = db[:florist_transitions]
           .insert(

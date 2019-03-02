@@ -214,7 +214,19 @@ describe '::Florist' do
           expect(s.state).to eq('created')
         end
 
-        it 'returns the last transition seen by the task (post allocation)'
+        it 'returns the last transition seen by the task (post allocation)' do
+
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob')
+
+          s = t.transition
+          a = s.assignment
+
+          expect(s.state).to eq('offered')
+          expect(a.resource_type).to eq('user')
+          expect(a.resource_name).to eq('bob')
+        end
       end
 
       describe '#transitions' do

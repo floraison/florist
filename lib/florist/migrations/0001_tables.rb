@@ -33,7 +33,7 @@ Sequel.migration do
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
 
-      String :status, null: true  # could be useful at some point
+      String :status, null: false  # 'active' or something else
 
       index :domain
       index :exid
@@ -89,6 +89,8 @@ Sequel.migration do
 
       String :status, null: false
         # "active" or something else
+
+      unique [ :transition_id, :resource_type, :resource_name ]
 
       #index :task_id
       index :transition_id

@@ -97,7 +97,7 @@ describe '::Florist' do
       expect(t[:content]).not_to eq(nil)
       expect(t[:ctime]).to match(/\A20\d{2}-.+\.\d+Z\z/)
       expect(t[:mtime]).to eq(t[:ctime])
-      expect(t[:status]).to eq(nil)
+      expect(t[:status]).to eq('active')
 
       expect(s[:task_id]).to eq(t[:id])
       expect(s[:content]).to eq(nil)
@@ -152,7 +152,7 @@ describe '::Florist' do
         expect(t[:taskname]).to eq('heavy one')
         expect(t[:attls1]).to eq('heavy one')
         expect(t[:content]).not_to eq(nil)
-        expect(t[:status]).to eq(nil)
+        expect(t[:status]).to eq('active')
 
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('allocated')
@@ -160,6 +160,7 @@ describe '::Florist' do
         expect(a[:transition_id]).to eq(s[:id])
         expect(a[:resource_type]).to eq('user')
         expect(a[:resource_name]).to eq('Alice')
+        expect(a[:status]).to eq('active')
       end
     end
 
@@ -198,7 +199,7 @@ describe '::Florist' do
         expect(t[:taskname]).to eq('neutralize york')
         expect(t[:attls1]).to eq('neutralize york')
         expect(t[:content]).not_to eq(nil)
-        expect(t[:status]).to eq(nil)
+        expect(t[:status]).to eq('active')
 
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('offered')
@@ -206,6 +207,7 @@ describe '::Florist' do
         expect(a[:transition_id]).to eq(s[:id])
         expect(a[:resource_type]).to eq('user')
         expect(a[:resource_name]).to eq('margaret')
+        expect(a[:status]).to eq('active')
       end
     end
 
@@ -244,7 +246,7 @@ describe '::Florist' do
         expect(t[:taskname]).to eq('get customer approval')
         expect(t[:attls1]).to eq('get customer approval')
         expect(t[:content]).not_to eq(nil)
-        expect(t[:status]).to eq(nil)
+        expect(t[:status]).to eq('active')
 
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('allocated')
@@ -252,6 +254,7 @@ describe '::Florist' do
         expect(a[:transition_id]).to eq(s[:id])
         expect(a[:resource_type]).to eq('role')
         expect(a[:resource_name]).to eq('rm')
+        expect(a[:status]).to eq('active')
       end
     end
   end
