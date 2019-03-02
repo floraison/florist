@@ -106,15 +106,18 @@ class Florist::Task < ::Florist::FloristModel
   #
   # transition 'methods'
 
-  def offer(*as)
+  def transition_to_offered(*as)
 
-    worklist.transition_to_offered(self, *as)
+    transition_and_or_assign('offered', *as)
   end
 
-  def allocate(*as)
+  def transition_to_allocated(*as)
 
-    worklist.transition_to_allocated(self, *as)
+    transition_and_or_assign('allocated', *as)
   end
+
+  alias offer transition_to_offered
+  alias allocate transition_to_allocated
 
 #  def return(opts={})
 #
@@ -158,6 +161,75 @@ class Florist::Task < ::Florist::FloristModel
       .first
 
     s ? Flor.from_blob(s[:content]).last['payload'] : nil
+  end
+
+  def transition_and_or_assign(state, *as)
+
+    opts = as.last.is_a?(Hash) ? as.pop : {}
+    assignments = extract_assignments(as)
+
+    db.transaction do
+
+      now = Flor.tstamp
+
+      s = db[:florist_transitions]
+        .select(:id, :state, :domain)
+        .where(task_id: id)
+        .reverse(:id)
+        .limit(1)
+        .first
+      sid = s[:id]
+
+      db[:florist_tasks].where(id: id).update(mtime: now)
+
+      if s[:state] != state
+        # TODO create new transition
+        sid = db[:florist_transitions]
+          .insert(
+            task_id: id,
+            state: state,
+            description: nil,
+            user: opts[:user] || '(florist)',
+            domain: s[:domain],
+            content: nil,
+            ctime: now,
+            mtime: now)
+      else
+        db[:florist_transitions].where(id: sid).update(mtime: now)
+      end
+
+      db[:florist_assignments]
+        .import(
+          [ :transition_id, :resource_type, :resource_name, :content,
+            :description, :ctime, :mtime, :status ],
+          assignments.map { |a|
+            [ sid, a[0], a[1], nil,
+              nil, now, now, 'active' ] }
+        ) if assignments.any?
+    end
+  end
+
+  def extract_assignments(as)
+
+    acs = as.collect(&:class)
+
+    if acs == [ String, String ]
+      [ as ]
+    elsif acs.uniq == [ Array ]
+      as
+        .collect { |a| [ a[0], a[1] ] }
+    elsif acs.uniq == [ Hash ]
+      as
+        .collect { |h|
+          h = Flor.to_string_keyed_hash(h)
+          t = h['resource_type'] || h['rtype'] || 'user'
+          n = h['resource_name'] || h['rname']
+          fail ArgumentErro.new("no resource_name in #{h.inspect}") unless n
+          [ t, n ] }
+    else
+      fail ArgumentError.new(
+        "couldn't figure out assignment list out of #{as.inspect}")
+    end
   end
 end
 
