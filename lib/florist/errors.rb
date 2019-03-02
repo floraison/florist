@@ -11,5 +11,9 @@ class Florist::FloristError < StandardError
 end
 
 class Florist::UnauthorizedError < Florist::FloristError
+  def code; 401; end
+end
+class Florist::ConflictError < Florist::FloristError
+  def code; 409; end
 end
 

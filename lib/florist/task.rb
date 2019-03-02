@@ -25,19 +25,6 @@ class Florist::Task < ::Florist::FloristModel
   def attd; message['attd']; end
   alias atth attd
 
-  def payload
-
-    @payload ||= _data['payload']
-  end
-
-  def payload=(h)
-
-    @payload = h
-  end
-
-  alias fields payload
-  alias fields= payload=
-
   def vars; message['vars']; end
   alias vard vars
 
@@ -55,16 +42,55 @@ class Florist::Task < ::Florist::FloristModel
     @execution_class[exid: exid]
   end
 
+  def payload
+
+    @payload ||=
+      last_transition_payload || _data['payload']
+  end
+
+  alias fields payload
+
+  #
+  # 'update' methods
+
+  def push_payload(h)
+
+    c = nil
+
+    db.transaction do
+
+      s = transition
+      now = Flor.tstamp
+      c = (s._data || []) << { 'tstamp' => now, 'payload' => h }
+
+      n = db[:florist_tasks]
+        .where(id: id, mtime: mtime)
+        .update(mtime: now)
+
+      fail Florist::ConflictError("task outdated, update failed") \
+        if n != 1
+
+      n = db[:florist_transitions]
+        .where(id: s.id, mtime: s.mtime)
+        .update(content: Flor.to_blob(c), mtime: now)
+
+      fail Florist::ConflictError("task transitions outdated, update failed") \
+        if n != 1
+    end
+
+    c
+  end
+
   #
   # 'graph' methods
 
   def last_transition
 
-    worklist.transition_table
-      .where(task_id: id)
-      .reverse(:id)
-      .limit(1)
-      .first
+    @transition ||=
+      worklist.transition_table
+        .where(task_id: id)
+        .reverse(:id)
+        .first
   end
 
   alias transition last_transition
@@ -120,32 +146,19 @@ class Florist::Task < ::Florist::FloristModel
 #  end
 #
 #  alias reply_with_error return_error
-#
-#  def assign(resource_type, resource_name, opts={})
-#
-#    now = Flor.tstamp
-#    typ = opts[:assignment_type] || opts[:type] || ''
-#    ame = opts[:assignment_meta]
-#    ast = opts[:assigmment_status] || opts[:status] || 'active'
-#
-#    assignment_id = db[:florist_task_assignments]
-#      .insert(
-#        task_id: id,
-#        type: typ,
-#        resource_type: resource_type,
-#        resource_name: resource_name,
-#        content: Flor.to_blob(ame),
-#        ctime: now,
-#        mtime: now,
-#        status: ast)
-#
-#    @assignments = nil
-#      # forces reload at next #assignments call
-#
-#    assignment_id
-#  end
 
   protected
+
+  def last_transition_payload
+
+    s = worklist.transition_table
+      .select(:content)
+      .where(task_id: id).exclude(content: nil)
+      .reverse(:id)
+      .first
+
+    s ? Flor.from_blob(s[:content]).last['payload'] : nil
+  end
 end
 
 class Florist::Transition < ::Florist::FloristModel
