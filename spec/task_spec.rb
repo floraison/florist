@@ -219,7 +219,7 @@ describe '::Florist' do
 
         it 'returns the last transition seen by the task' do
 
-          t = @worklist.tasks.first
+          t = @worklist.task_table.first
 
           s = t.transition
 
@@ -230,9 +230,12 @@ describe '::Florist' do
 
         it 'returns the last transition seen by the task (post allocation)' do
 
-          t = @worklist.tasks.first
+          t = @worklist.task_table.first
 
           t.offer('user', 'bob')
+
+          #t = @worklist.task_table.first
+          t.refresh
 
           s = t.transition
           a = s.assignment
@@ -247,9 +250,12 @@ describe '::Florist' do
 
         it 'returns all the transitions seen by the task' do
 
-          t = @worklist.tasks.first
+          t = @worklist.task_table.first
 
           t.allocate('role', 'rm')
+
+          t.refresh
+
           t.allocate('user', 'bob')
 
           ss = t.transitions

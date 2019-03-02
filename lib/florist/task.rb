@@ -50,6 +50,14 @@ class Florist::Task < ::Florist::FloristModel
 
   alias fields payload
 
+  def refresh
+
+    @payload = nil
+    @transition = nil
+
+    super
+  end
+
   #
   # 'update' methods
 
@@ -172,18 +180,18 @@ class Florist::Task < ::Florist::FloristModel
 
       now = Flor.tstamp
 
-      s = db[:florist_transitions]
-        .select(:id, :state, :domain)
-        .where(task_id: id)
-        .reverse(:id)
-        .limit(1)
-        .first
-      sid = s[:id]
+      s = last_transition
+      sid = s.id
 
-      db[:florist_tasks].where(id: id).update(mtime: now)
+      n = db[:florist_tasks]
+        .where(id: id, mtime: mtime)
+        .update(mtime: now)
 
-      if s[:state] != state
-        # TODO create new transition
+      fail Florist::ConflictError("task outdated, update failed") \
+        if n != 1
+
+      if s.state != state
+
         sid = db[:florist_transitions]
           .insert(
             task_id: id,
@@ -195,7 +203,13 @@ class Florist::Task < ::Florist::FloristModel
             ctime: now,
             mtime: now)
       else
-        db[:florist_transitions].where(id: sid).update(mtime: now)
+
+        n = db[:florist_transitions]
+          .where(id: sid, mtime: s.mtime)
+          .update(mtime: now)
+
+        fail Florist::ConflictError("task transition outdated, update failed") \
+          if n != 1
       end
 
       db[:florist_assignments]
