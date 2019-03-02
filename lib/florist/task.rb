@@ -53,6 +53,8 @@ class Florist::Task < ::Florist::FloristModel
     @execution_class[exid: exid]
   end
 
+  def worklist; self.class.worklist; end
+
   #
   # 'graph' methods
 

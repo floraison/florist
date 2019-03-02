@@ -171,6 +171,17 @@ describe '::Florist' do
           )
         end
       end
+
+      describe '#worklist' do
+
+        it 'returns the worklist from which the task was fetched' do
+
+          t = @worklist.tasks.first
+
+          expect(t.class.worklist).to eq(@worklist)
+          expect(t.worklist).to eq(@worklist)
+        end
+      end
     end
 
     context 'graph' do
