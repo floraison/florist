@@ -211,7 +211,48 @@ describe '::Florist' do
 
     context "rtype: 'group'" do
 
-      it 'offers the task to the group with the tasker name'
+      it 'allocates the task to the group with the tasker name' do
+
+        @unit.add_tasker(
+          'rm',
+          class: Florist::WorklistTasker,
+          state: 'allocated',
+          rtype: 'role')
+
+        r = @unit.launch(
+          %q{
+            rm 'get customer approval'
+          },
+          wait: 'task')
+
+        expect(r['point']).to eq('task')
+        expect(r['tasker']).to eq('rm')
+
+        ts = @unit.storage.db[:florist_tasks].all
+        ss = @unit.storage.db[:florist_transitions].all
+        as = @unit.storage.db[:florist_assignments].all
+
+        expect(ts.size).to eq(1)
+        expect(ss.size).to eq(1)
+        expect(as.size).to eq(1)
+
+        t, s, a = ts.first, ss.first, as.first
+
+        expect(t[:exid]).to eq(r['exid'])
+        expect(t[:nid]).to eq(r['nid'])
+        expect(t[:tasker]).to eq('rm')
+        expect(t[:taskname]).to eq('get customer approval')
+        expect(t[:attls1]).to eq('get customer approval')
+        expect(t[:content]).not_to eq(nil)
+        expect(t[:status]).to eq(nil)
+
+        expect(s[:task_id]).to eq(t[:id])
+        expect(s[:state]).to eq('allocated')
+
+        expect(a[:transition_id]).to eq(s[:id])
+        expect(a[:resource_type]).to eq('role')
+        expect(a[:resource_name]).to eq('rm')
+      end
     end
   end
 end

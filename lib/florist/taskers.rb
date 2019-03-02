@@ -12,9 +12,6 @@ module Florist
 
     protected
 
-    # TODO [ ] @conf['allowed_overrides']
-    #          "state", ...
-
     def get_db
 
       @uri ||= @conf['db_uri'] || @conf['uri']
