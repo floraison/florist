@@ -110,21 +110,6 @@ describe '::Florist' do
         end
       end
 
-#      describe '#assignments' do
-#
-#        it 'lists the task assignments' do
-#
-#          t = @unit.tasks.first
-#
-#          expect(t.assignments.size).to eq(1)
-#
-#          a = t.assignments.first
-#
-#          expect(a.task_id).to eq(t.id)
-#          expect(a.task.id).to eq(t.id)
-#        end
-#      end
-
       describe '#attl / #atts / #atta' do
 
         it 'returns the task attribute list/array' do
@@ -189,35 +174,26 @@ describe '::Florist' do
 
     context 'graph' do
 
-      # #assignment...
+      describe '#transition, #last_transition' do
+
+        it 'returns the last transition seen by the task'
+      end
+
+      describe '#transitions' do
+
+        it 'returns all the transitions seen by the task'
+      end
+
+      describe '#assignments, #current_assignments' do
+
+        it 'returns the current assignments for the task'
+      end
     end
 
     context 'actions' do
 
       # TODO reintroduce, but with the worklist (session) concept
     end
-  end
-
-  describe '::Task333 (dedicated dataset)' do
-
-#    before :each do
-#
-#      @unit.add_tasker('accounting', Florist::GroupTasker)
-#      @unit.add_tasker('sales', Florist::GroupTasker)
-#      @unit.add_tasker('alice', Florist::UserTasker)
-#
-#      2.times do
-#        @unit.launch(%q{ accounting _ })
-#        @unit.launch(%q{ sales _ })
-#        @unit.launch(%q{ alice _ })
-#      end
-#
-#      wait_until { @db[:florist_tasks].count == 6 }
-#
-#      @tasks = Florist.tasks(@db)
-#    end
-
-    # TODO reintroduce, if necessary
   end
 end
 
