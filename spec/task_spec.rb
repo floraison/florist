@@ -23,7 +23,7 @@ describe '::Florist' do
     @unit.storage.migrate
     @unit.start
 
-    @db = @unit.storage.db
+    @worklist = Florist::Worklist.new(@unit)
   end
 
   after :each do
@@ -39,7 +39,8 @@ describe '::Florist' do
 
         @unit.add_tasker(
           'alice',
-          { class: Florist::WorklistTasker, include_vars: true })
+          class: Florist::WorklistTasker,
+          include_vars: true)
 
         @r = @unit.launch(
           %q{
@@ -58,7 +59,7 @@ describe '::Florist' do
 
         it 'returns the tasker as indicated in the execution' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.tasker).to eq('alice')
         end
@@ -68,7 +69,7 @@ describe '::Florist' do
 
         it 'returns the name of the task' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.taskname).to eq('send message')
           expect(t.task_name).to eq('send message')
@@ -79,7 +80,7 @@ describe '::Florist' do
 
         it 'returns the second string attribute in the attl' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.attls1).to eq('send message')
         end
@@ -89,7 +90,7 @@ describe '::Florist' do
 
         it 'returns the original message' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
           m = t.message
 
           expect(m['m']).to eq(@r['m'])
@@ -102,7 +103,7 @@ describe '::Florist' do
 
         it 'returns the current payload' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.payload).to eq({ 'kilroy' => 'was here', 'ret' => nil })
           expect(t.payload).to eq(@r['payload'])
@@ -114,7 +115,7 @@ describe '::Florist' do
 
         it 'returns the task attribute list/array' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.attl).to eq([ 'alice', 'send message' ])
           expect(t.atts).to eq([ 'alice', 'send message' ])
@@ -126,7 +127,7 @@ describe '::Florist' do
 
         it 'returns the task attribute dictionary' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.attd).to eq({ 'addressee' => 'bob' })
           expect(t.atth).to eq({ 'addressee' => 'bob' })
@@ -137,7 +138,7 @@ describe '::Florist' do
 
         it 'returns the var dictionary coming with the task' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.vars).to eq({ 'v0' => 'hello', 'v1' => 2345 })
           expect(t.vard).to eq({ 'v0' => 'hello', 'v1' => 2345 })
@@ -150,14 +151,14 @@ describe '::Florist' do
 
           @unit.storage.db.drop_table(:flor_executions)
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           expect(t.execution).to eq(nil)
         end
 
         it 'returns the execution that emitted the task' do
 
-          t = @unit.tasks.first
+          t = @worklist.tasks.first
 
           x = t.execution
 
