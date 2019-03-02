@@ -186,9 +186,35 @@ describe '::Florist' do
 
     context 'graph' do
 
+      before :each do
+
+        @unit.add_tasker(
+          'alice',
+          Florist::WorklistTasker)
+
+        @r = @unit.launch(
+          %q{
+            alice 'send message'
+          },
+          wait: 'task')
+
+        wait_until { @worklist.tasks.count == 1 }
+      end
+
       describe '#transition, #last_transition' do
 
-        it 'returns the last transition seen by the task'
+        it 'returns the last transition seen by the task' do
+
+          t = @worklist.tasks.first
+
+          s = t.transition
+
+          expect(s.class.ancestors).to include(Florist::Transition)
+          expect(s.task_id).to eq(t.id)
+          expect(s.state).to eq('created')
+        end
+
+        it 'returns the last transition seen by the task (post allocation)'
       end
 
       describe '#transitions' do

@@ -47,7 +47,7 @@ Sequel.migration do
 
       primary_key :id
 
-      Integer :task_id
+      Integer :task_id, null: false
 
       String :state, null: false
         # http://www.workflowpatterns.com/patterns/resource/

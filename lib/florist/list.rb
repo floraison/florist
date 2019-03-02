@@ -29,19 +29,23 @@ class Florist::Worklist
 
     @controller = get_controller
 
-    @task_class =
+    @task_table =
       make_model_class(Florist::Task, :florist_tasks)
-    #@transition_class =
-    #  make_model_class(Florist::Transition, :florist_transitions)
+    @transition_table =
+      make_model_class(Florist::Transition, :florist_transitions)
     #@assignment_class =
     #  make_model_class(Florist::Assignment, :florist_assingments)
   end
 
-  def tasks(domain=nil)
+  def task_table; @task_table; end
+  def transition_table; @transition_table; end
+  #def assignment_table; @assignment_table; end
+
+  def tasks(domain=nil, opts={})
 
     @controller.may?(:browse_tasks, domain)
 
-    @task_class.all
+    task_table.all
   end
 
   protected

@@ -58,18 +58,17 @@ class Florist::Task < ::Florist::FloristModel
   #
   # 'graph' methods
 
-#  def assignments
-#
-#    @assignment_model ||=
-#      Florist.assignments(db)
-#
-#    @assignments ||= @assignment_model
-#      .where(task_id: id)
-#      .order(:ctime)
-#      .all
-#      .each { |a| a.task = self }
-#  end
-#  def assignment; assignments.first; end
+  def last_transition
+
+puts worklist.transition_table.where(task_id: id).reverse(:id).limit(1).sql
+    worklist.transition_table
+      .where(task_id: id)
+      .reverse(:id)
+      .limit(1)
+      .first
+  end
+
+  alias transition last_transition
 
   #
   # transition 'methods'
@@ -132,12 +131,12 @@ class Florist::Task < ::Florist::FloristModel
   protected
 end
 
-class Florist::Transition < ::Flor::FlorModel
+class Florist::Transition < ::Florist::FloristModel
 
   #attr_accessor :task
 end
 
-class Florist::Assignment < ::Flor::FlorModel
+class Florist::Assignment < ::Florist::FloristModel
 
   #attr_accessor :task
 end
