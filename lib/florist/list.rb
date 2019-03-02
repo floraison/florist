@@ -1,7 +1,11 @@
 
 class Florist::Worklist
 
-  attr_reader :db, :unit
+  attr_reader :db    # the Sequel florist database
+  attr_reader :unit  # the flor unit/scheduler
+
+  attr_reader :user, :domain
+    # the user of the worklist and the domain at/in which it operates
 
   # Florist::Worklist.new(db)
   # Florist::Worklist.new(flor_unit)
@@ -35,6 +39,9 @@ class Florist::Worklist
       make_model_class(Florist::Transition, :florist_transitions)
     @assignment_table =
       make_model_class(Florist::Assignment, :florist_assignments)
+
+    @user = opts[:user] || '(florist)'
+    @domain = opts[:domain] || ''
   end
 
   def task_table; @task_table; end

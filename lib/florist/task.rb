@@ -197,8 +197,8 @@ class Florist::Task < ::Florist::FloristModel
             task_id: id,
             state: state,
             description: nil,
-            user: opts[:user] || '(florist)',
-            domain: s[:domain],
+            user: opts[:user] || worklist.user,
+            domain: opts[:domain] || worklist.domain,
             content: nil,
             ctime: now,
             mtime: now)
