@@ -145,33 +145,21 @@ class Florist::Task < ::Florist::FloristModel
 
 #  def return(opts={})
 #
-#    # [o] TODO current payload (default) OR
-#    # [ ] TODO original payload OR
-#    # [ ] TODO overlay payload OR
-#    # [ ] TODO new payload
-#
 #    m = Flor.dup(message)
 #    m['point'] = 'return'
 #    m['payload'] = Flor.to_string_keyed_hash(payload)
 #
 #    queue_message(m)
 #  end
-#
 #  alias reply return
 #
 #  def return_error(err, opts={})
-#
-#    # [o] TODO current payload (default) OR
-#    # [ ] TODO original payload OR
-#    # [ ] TODO overlay payload OR
-#    # [ ] TODO new payload
 #
 #    m = Flor.to_error_message(message, err)
 #    #m['payload'] = payload
 #
 #    queue_message(m)
 #  end
-#
 #  alias reply_with_error return_error
 
   protected
@@ -196,6 +184,9 @@ class Florist::Task < ::Florist::FloristModel
 
       now = Flor.tstamp
 
+      pl = opts[:payload] || opts[:fields]
+      pl = { tstamp: now, payload: pl } if pl
+
       s = last_transition
       sid = s.id
 
@@ -215,14 +206,18 @@ class Florist::Task < ::Florist::FloristModel
             description: nil,
             user: opts[:user] || worklist.user,
             domain: opts[:domain] || worklist.domain,
-            content: nil,
+            content: pl ? Flor.to_blob([ pl ]) : nil,
             ctime: now,
             mtime: now)
+
       else
+
+        cols = { mtime: now }
+        cols[:content] = Flor.to_blob((s._data || []) << pl) if pl
 
         n = db[:florist_transitions]
           .where(id: sid, mtime: s.mtime)
-          .update(mtime: now)
+          .update(cols)
 
         fail Florist::ConflictError("task transition outdated, update failed") \
           if n != 1

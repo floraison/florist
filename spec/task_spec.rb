@@ -376,6 +376,42 @@ describe '::Florist' do
           expect(a.rname).to eq('charly')
           expect(as.size).to eq(1)
         end
+
+        context 'payload:/fields:' do
+
+          it 'places an updated payload in the transition row' do
+
+            t = @worklist.task_table.first
+
+            t.allocate(
+              'user', 'charly',
+              payload: t.payload.merge(name: 'leo'))
+            t.refresh
+
+            expect(t.state).to eq('allocated')
+            expect(t.assignment.rname).to eq('charly')
+            expect(t.payload).to eq('ret' => 'send message', 'name' => 'leo')
+          end
+
+          it 'places an updated payload in the transition row' do
+
+            t = @worklist.task_table.first
+
+            t.allocate('user', 'charly', payload: t.payload.merge(name: 'leo'))
+            t.refresh
+            t.allocate('user', 'david', payload: t.payload.merge(name: 'xen'))
+            t.refresh
+
+            d = t.transition._data
+
+            expect(d.size).to eq(2)
+
+            expect(d[0]['payload'])
+              .to eq('ret' => 'send message', 'name' => 'leo')
+            expect(d[1]['payload'])
+              .to eq('ret' => 'send message', 'name' => 'xen')
+          end
+        end
       end
 
       describe '#transition_to_offered / #offer' do
