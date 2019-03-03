@@ -15,7 +15,7 @@ class Florist::Task < ::Florist::FloristModel
   #
   # accessors et al
 
-  alias message data
+  def message; data['message']; end
 
   def task_name; taskname; end
 
@@ -46,7 +46,7 @@ class Florist::Task < ::Florist::FloristModel
   def payload
 
     @payload ||=
-      last_transition_payload || _data['payload']
+      last_transition_payload || message['payload']
   end
 
   alias fields payload

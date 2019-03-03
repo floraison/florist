@@ -113,7 +113,7 @@ describe '::Florist' do
       expect(a[:mtime]).to eq(t[:ctime])
       expect(a[:status]).to eq('active')
 
-      m = Flor::Storage.from_blob(t[:content])
+      m = Flor::Storage.from_blob(t[:content])['message']
       expect(m['point']).to eq('task')
       expect(m['m']).to eq(r['m'])
     end

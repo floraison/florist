@@ -61,6 +61,7 @@ module Florist
       rty = opt_or_conf(:resource_type, :rtype, nil)
       rna = rty ? opt_or_conf(:resource_name, :rname, message['tasker']) : nil
       sta = opt_or_conf(:state, rty ? 'offered' : 'created')
+      con = { message: message }
 
       ti = nil
 
@@ -76,7 +77,7 @@ module Florist
             tasker: message['tasker'],
             taskname: message['taskname'],
             attls1: (message['attl'] || []).select { |e| e.is_a?(String) }[1],
-            content: Flor.to_blob(message),
+            content: Flor.to_blob(con),
             ctime: now,
             mtime: now,
             status: 'active')
