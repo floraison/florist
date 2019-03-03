@@ -339,7 +339,7 @@ describe '::Florist' do
       end
     end
 
-    context 'actions' do
+    context 'basic transitions' do
 
       before :each do
 
@@ -447,6 +447,61 @@ describe '::Florist' do
           expect(as[1].rname).to eq('frodo')
         end
       end
+
+      describe '#transition_to_start / #start' do
+        it 'works'
+      end
+      describe '#transition_to_suspended / #suspend' do
+        it 'marks the task as suspended'
+      end
+      describe '#transition_to_failed / #fail' do
+        it 'marks the task as failed and replies to the execution'
+        context 'reply: false' do
+          it 'marks the task as failed but does not reply'
+        end
+      end
+      describe '#transition_to_completed / #complete' do
+        it 'marks the task as completed and replies to the execution'
+        context 'reply: false' do
+          it 'marks the task as completed but does not reply'
+        end
+      end
+    end
+
+    context 'advanced transitions' do
+
+#      before :each do
+#
+#        @unit.add_tasker(
+#          'bob',
+#          Florist::WorklistTasker)
+#
+#        @r = @unit.launch(
+#          %q{
+#            bob 'send message'
+#          },
+#          wait: 'task')
+#
+#        wait_until { @worklist.tasks.count == 1 }
+#      end
+    end
+
+    context 'detour transitions' do
+
+#      before :each do
+#
+#        @unit.add_tasker(
+#          'bob',
+#          Florist::WorklistTasker)
+#
+#        @r = @unit.launch(
+#          %q{
+#            bob 'send message'
+#          },
+#          wait: 'task')
+#
+#        wait_until { @worklist.tasks.count == 1 }
+#      end
     end
   end
 end

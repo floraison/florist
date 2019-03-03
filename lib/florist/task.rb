@@ -9,6 +9,7 @@ class Florist::FloristModel < ::Flor::FlorModel
   def worklist; self.class.worklist; end
 end
 
+
 class Florist::Task < ::Florist::FloristModel
 
   #
@@ -253,7 +254,7 @@ class Florist::Task < ::Florist::FloristModel
           h = Flor.to_string_keyed_hash(h)
           t = h['resource_type'] || h['rtype'] || 'user'
           n = h['resource_name'] || h['rname']
-          fail ArgumentErro.new("no resource_name in #{h.inspect}") unless n
+          fail ArgumentError.new("no resource_name in #{h.inspect}") unless n
           [ t, n ] }
     else
       fail ArgumentError.new(
