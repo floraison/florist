@@ -46,7 +46,7 @@ class Florist::Task < ::Florist::FloristModel
   def payload
 
     @payload ||=
-      last_transition_payload || message['payload']
+      latest_transition_payload || message['payload']
   end
 
   alias fields payload
@@ -164,15 +164,22 @@ class Florist::Task < ::Florist::FloristModel
 
   protected
 
-  def last_transition_payload
+  def latest_transition_content(key)
 
-    s = worklist.transition_table
-      .select(:content)
+    k = key.to_s
+
+    worklist.transition_table
+      .select(:id, :content)
       .where(task_id: id).exclude(content: nil)
       .reverse(:id)
-      .first
+      .each { |s| s.data.each { |e| return e[k] if e.has_key?(k) } }
 
-    s ? Flor.from_blob(s[:content]).last['payload'] : nil
+    nil
+  end
+
+  def latest_transition_payload
+
+    latest_transition_content('payload')
   end
 
   def transition_and_or_assign(state, *as)
@@ -184,8 +191,13 @@ class Florist::Task < ::Florist::FloristModel
 
       now = Flor.tstamp
 
+      meta = { tstamp: now }
+        #
       pl = opts[:payload] || opts[:fields]
-      pl = { tstamp: now, payload: pl } if pl
+      meta[:payload] = pl if pl
+        #
+      met = opts[:meta]
+      meta.merge!(met) if met  # TODO spec me
 
       s = last_transition
       sid = s.id
@@ -206,14 +218,14 @@ class Florist::Task < ::Florist::FloristModel
             description: nil,
             user: opts[:user] || worklist.user,
             domain: opts[:domain] || worklist.domain,
-            content: pl ? Flor.to_blob([ pl ]) : nil,
+            content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
             ctime: now,
             mtime: now)
 
       else
 
         cols = { mtime: now }
-        cols[:content] = Flor.to_blob((s._data || []) << pl) if pl
+        cols[:content] = Flor.to_blob((s._data || []) << meta) if meta.size > 1
 
         n = db[:florist_transitions]
           .where(id: sid, mtime: s.mtime)
