@@ -140,7 +140,7 @@ describe '::Florist' do
 
         @unit.add_tasker('eve', Florist::WorklistTasker)
 
-        @r = @unit.launch(%q{ eve 'prepare ground' }, wait: 'task')
+        @unit.launch(%q{ eve 'prepare ground' })
 
         wait_until { @worklist.tasks.count == 1 }
       end
@@ -192,11 +192,11 @@ describe '::Florist' do
           'alice',
           Florist::WorklistTasker)
 
-        @r = @unit.launch(
+        @unit.launch(
           %q{
             alice 'send message'
           },
-          wait: 'task')
+          payload: { 'text' => 'lore ipsum' })
 
         wait_until { @worklist.tasks.count == 1 }
       end
@@ -256,9 +256,10 @@ describe '::Florist' do
 
           t = @worklist.tasks.first
 
-          expect(t.payload).to eq({ 'ret' => 'send message' })
-          expect(t.payload).to eq(@r['payload'])
-          expect(t.fields).to eq(@r['payload'])
+          expect(t.payload
+            ).to eq('text' => 'lore ipsum', 'ret' => 'send message')
+          expect(t.fields
+            ).to eq('text' => 'lore ipsum', 'ret' => 'send message')
         end
 
         it 'returns the latest payload' do
