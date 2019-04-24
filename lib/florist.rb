@@ -21,9 +21,7 @@ module Florist
 
     def migration_dir
 
-      File.absolute_path(
-        File.join(
-          File.dirname(__FILE__), 'florist/migrations'))
+      File.join(__dir__, 'florist/migrations')
     end
 
     def delete_tables(db_or_db_uri, opts={})
