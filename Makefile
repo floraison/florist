@@ -49,7 +49,10 @@ FROM?=nil
 #migrate:
 #	$(RUBY) -Ilib -e "require 'flor/unit'; Flor::Unit.new('envs/$(FLOR_ENV)/etc/conf.json').storage.migrate($(TO), $(FROM))"
 
+clean:
+	rm flor_*.dump
+
 
 .PHONY: \
-  count_lines gemspec_validate name cw build push
+  count_lines gemspec_validate name cw build push clean
 
