@@ -160,7 +160,7 @@ describe '::Florist' do
 
           t = @worklist.tasks.first
 
-          x = t.execution
+          x = wait_until { t.execution }
 
           expect(x.exid).to eq(t.exid)
 
