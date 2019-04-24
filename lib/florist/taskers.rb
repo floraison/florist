@@ -61,6 +61,7 @@ module Florist
       rty = opt_or_conf(:resource_type, :rtype, nil)
       rna = rty ? opt_or_conf(:resource_name, :rname, message['tasker']) : nil
       sta = opt_or_conf(:state, rty ? 'offered' : 'created')
+      nam = opt_or_conf(:transition_name, :tname, rty ? 'offer' : 'create')
       con = { message: message }
 
       ti = nil
@@ -85,6 +86,7 @@ module Florist
         si = db[:florist_transitions]
           .insert(
             task_id: ti,
+            name: nam,
             state: sta,
             description: nil,
             user: '(flor)',

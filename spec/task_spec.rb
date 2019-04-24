@@ -218,6 +218,7 @@ describe '::Florist' do
 
           expect(s.class.ancestors).to include(Florist::Transition)
           expect(s.task_id).to eq(t.id)
+          expect(s.name).to eq('create')
           expect(s.state).to eq('created')
         end
 
@@ -233,6 +234,7 @@ describe '::Florist' do
           s = t.transition
           a = s.assignment
 
+          expect(s.name).to eq('offer')
           expect(s.state).to eq('offered')
           expect(a.resource_type).to eq('user')
           expect(a.resource_name).to eq('bob')
@@ -253,6 +255,7 @@ describe '::Florist' do
 
           ss = t.transitions
 
+          expect(ss.collect(&:name)).to eq(%w[ create allocate ])
           expect(ss.collect(&:state)).to eq(%w[ created allocated ])
         end
       end
@@ -281,6 +284,16 @@ describe '::Florist' do
           t = @worklist.tasks.first
 
           expect(t.payload).to eq({ 'kilroy' => 'was there' })
+        end
+      end
+
+      describe '#tname' do
+
+        it 'returns the current name (transition.name)' do
+
+          t = @worklist.tasks.first
+
+          expect(t.tname).to eq('create')
         end
       end
 
@@ -370,11 +383,13 @@ describe '::Florist' do
 
           t = @worklist.task_table.first
 
+          expect(t.tname).to eq('create')
           expect(t.state).to eq('created')
 
           t.allocate('user', 'charly')
           t.refresh
 
+          expect(t.tname).to eq('allocate')
           expect(t.state).to eq('allocated')
 
           a = t.assignment
@@ -492,9 +507,11 @@ describe '::Florist' do
         end
       end
 
-      describe '#transition_to_start / #start' do
-        it 'works'
+      describe '#transition_to_started / #start' do
+
+        it 'marks the task as started'
       end
+
       describe '#transition_to_suspended / #suspend' do
         it 'marks the task as suspended'
       end

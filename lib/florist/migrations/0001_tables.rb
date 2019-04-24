@@ -47,7 +47,9 @@ Sequel.migration do
       Integer :task_id, null: false
 
       String :state, null: false
+        #
         # http://www.workflowpatterns.com/patterns/resource/
+        #
         # "created"
         # "offered"
         # "allocated"
@@ -55,6 +57,16 @@ Sequel.migration do
         # "suspended"
         # "failed"
         # "completed"
+
+      String :name, null: false
+        #
+        # http://www.workflowpatterns.com/patterns/resource/#fig6
+        #
+        # "create", "offer", "allocate", "start", "fail"
+        # and also
+        # "suspend", "resume", "escalate", "delegate", "deallocate",
+        # "skip"
+
 
       String :description
 

@@ -117,6 +117,11 @@ class Florist::Task < ::Florist::FloristModel
     last_transition.state
   end
 
+  def tname
+
+    last_transition.name
+  end
+
   def assignment
 
     last_transition.assignment
@@ -187,6 +192,8 @@ class Florist::Task < ::Florist::FloristModel
     opts = as.last.is_a?(Hash) ? as.pop : {}
     assignments = extract_assignments(as)
 
+    name = opts[:transition_name] || opts[:tname] || determine_tname(state)
+
     db.transaction do
 
       now = Flor.tstamp
@@ -214,6 +221,7 @@ class Florist::Task < ::Florist::FloristModel
         sid = db[:florist_transitions]
           .insert(
             task_id: id,
+            name: name,
             state: state,
             description: nil,
             user: opts[:user] || worklist.user,
@@ -266,6 +274,20 @@ class Florist::Task < ::Florist::FloristModel
     else
       fail ArgumentError.new(
         "couldn't figure out assignment list out of #{as.inspect}")
+    end
+  end
+
+  def determine_tname(state)
+
+    case state
+    when 'created' then 'create'
+    when 'offered' then 'offer'
+    when 'allocated' then 'allocate'
+    when 'started' then 'start'
+    when 'suspended' then 'suspend'
+    when 'failed' then 'fail'
+    when 'completed' then 'complete'
+    else "to-#{state}"
     end
   end
 end
