@@ -15,13 +15,15 @@ describe '::Florist' do
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
       sto_uri: storage_uri,
-      sto_migration_dir: 'spec/migrations',
-      sto_sparse_migrations: true)
+      sto_migration_table: :flor_schema_info)
     @unit.conf['unit'] = 'tskspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
     @unit.storage.migrate
     @unit.start
+
+    Florist.delete_tables(storage_uri)
+    Florist.migrate(storage_uri, table: :florist_schema_info)
 
     @worklist = Florist::Worklist.new(@unit)
   end
@@ -146,6 +148,11 @@ describe '::Florist' do
       end
 
       describe '#execution' do
+
+        after :each do
+
+          @unit.storage.db.tables.each { |t| @unit.storage.db.drop_table(t) }
+        end
 
         it 'returns nil if the task db is separate from the execution db' do
 

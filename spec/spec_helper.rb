@@ -78,7 +78,8 @@ module Helpers
     if key
       "#{jruby? ? 'jdbc:' : ''}sqlite://#{fn}"
     else
-      jruby? ? 'jdbc:sqlite://tmp/florist_test.db' : 'sqlite::memory:'
+      #jruby? ? 'jdbc:sqlite://tmp/florist_test.db' : 'sqlite::memory:'
+      "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/florist_test.db"
     end
   end
 end

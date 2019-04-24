@@ -15,13 +15,15 @@ describe '::Florist' do
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
       sto_uri: storage_uri,
-      sto_migration_dir: 'spec/migrations',
-      sto_sparse_migrations: true)
+      sto_migration_table: :flor_schema_info)
     @unit.conf['unit'] = 'wltspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
     @unit.storage.migrate
     @unit.start
+
+    Florist.delete_tables(storage_uri)
+    Florist.migrate(storage_uri, table: :florist_schema_info)
   end
 
   after :each do

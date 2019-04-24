@@ -8,14 +8,17 @@ module Florist
       File.join(__dir__, 'migrations')
     end
 
+    # Delete tables in the storage database that begin with "florist_"
+    # and have more than 2 columns (the Sequel schema_info table has 1 column
+    # as of this writing)
+    #
     def delete_tables(db_or_db_uri, opts={})
 
-      db =
-        db_or_db_uri.is_a?(String) ?
-        Sequel.connect(db_or_db_uri, opts) :
-        db_or_db_uri
+      db = connect(db_or_db_uri, opts)
 
-      db.tables.each { |t| db[t].delete if t.to_s.match(/^florist_/) }
+      db.tables.each { |t|
+        db[t].delete \
+          if t.to_s.match(/^florist_/) && db[t].columns.size > 2 }
 
       db.disconnect if db_or_db_uri.is_a?(String)
 
@@ -42,16 +45,23 @@ module Florist
         opts[:migration_dir] ||
         Florist.migration_dir
 
-      db =
-        db_or_db_uri.is_a?(String) ?
-        Sequel.connect(db_or_db_uri, opts) :
-        db_or_db_uri
+      db = connect(db_or_db_uri, opts)
 
       Sequel::Migrator.run(db, dir, opts)
 
       db.disconnect if db_or_db_uri.is_a?(String)
 
       nil
+    end
+
+    protected
+
+    def connect(o, opts)
+
+      case o
+      when String then Sequel.connect(o, opts)
+      else o
+      end
     end
   end
 end
