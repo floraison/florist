@@ -490,8 +490,7 @@ describe '::Florist' do
 
           t.offer(
             { rtype: 'user', rname: 'eve' },
-            { resource_type: 'user', resource_name: 'frodo' },
-            {}) # force opts as last elt
+            { resource_type: 'user', resource_name: 'frodo' })
           t.refresh
 
           expect(t.state).to eq('offered')

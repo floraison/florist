@@ -197,7 +197,7 @@ class Florist::Task < ::Florist::FloristModel
 
   def transition_and_or_assign(state, *as)
 
-    opts = as.last.is_a?(Hash) ? as.pop : {}
+    opts = is_opts_hash?(as.last) ? as.pop : {}
     assignments = extract_assignments(as)
 
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
@@ -221,7 +221,7 @@ class Florist::Task < ::Florist::FloristModel
         .where(id: id, mtime: mtime)
         .update(mtime: now)
 
-      fail Florist::ConflictError("task outdated, update failed") \
+      fail Florist::ConflictError('task outdated, update failed') \
         if n != 1
 
       if s.state != state
@@ -306,6 +306,12 @@ class Florist::Task < ::Florist::FloristModel
         mtime: now,
         status: 'active')
           # hopefully, your Sequel adapater returns the newly inserted :id
+  end
+
+  def is_opts_hash?(o)
+
+    o.is_a?(Hash) &&
+    (o.keys.map(&:to_s) & %w[ resource_name rname resource_type rtype ]).empty?
   end
 
   def extract_assignments(as)
