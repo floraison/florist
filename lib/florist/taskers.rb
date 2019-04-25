@@ -93,19 +93,31 @@ module Florist
             domain: dom,
             content: nil,
             ctime: now,
-            mtime: now)
-
-        db[:florist_assignments]
-          .insert(
-            transition_id: si,
-            resource_type: rty,
-            resource_name: rna,
-            content: nil,
-            description: nil,
-            ctime: now,
             mtime: now,
-            status: 'active'
-        ) if rty
+            status: 'active')
+
+        if rty
+
+          ai = db[:florist_assignments]
+            .insert(
+              task_id: ti,
+              resource_type: rty,
+              resource_name: rna,
+              content: nil,
+              description: nil,
+              ctime: now,
+              mtime: now,
+              status: 'active')
+
+          db[:florist_transitions_assignments]
+            .insert(
+              task_id: ti,
+              transition_id: si,
+              assignment_id: ai,
+              ctime: now,
+              mtime: now,
+              status: 'active')
+        end
       end
 
       db.disconnect if @uri

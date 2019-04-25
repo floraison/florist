@@ -83,13 +83,16 @@ describe '::Florist' do
 
       ts = @unit.storage.db[:florist_tasks].all
       ss = @unit.storage.db[:florist_transitions].all
+      xs = @unit.storage.db[:florist_transitions_assignments].all
       as = @unit.storage.db[:florist_assignments].all
 
       expect(ts.size).to eq(1)
       expect(ss.size).to eq(1)
+      expect(xs.size).to eq(1)
       expect(as.size).to eq(1)
 
-      t, s, a = ts.first, ss.first, as.first
+      #t, s, x, a = ts.first, ss.first, xs.first, as.first
+      t, s, x, a = [ ts, ss, xs, as ].collect(&:first)
 
       expect(t[:exid]).to eq(r['exid'])
       expect(t[:nid]).to eq(r['nid'])
@@ -106,8 +109,15 @@ describe '::Florist' do
       expect(s[:state]).to eq('allocated')
       expect(s[:ctime]).to eq(t[:ctime])
       expect(s[:mtime]).to eq(t[:ctime])
+      expect(s[:status]).to eq('active')
 
-      expect(a[:transition_id]).to eq(s[:id])
+      expect(x[:task_id]).to eq(t[:id])
+      expect(x[:transition_id]).to eq(s[:id])
+      expect(x[:assignment_id]).to eq(a[:id])
+      expect(x[:ctime]).to eq(t[:ctime])
+      expect(x[:mtime]).to eq(t[:ctime])
+      expect(x[:status]).to eq('active')
+
       expect(a[:resource_type]).to eq('user')
       expect(a[:resource_name]).to eq('alice')
       expect(a[:content]).to eq(nil)
@@ -140,13 +150,15 @@ describe '::Florist' do
 
         ts = @unit.storage.db[:florist_tasks].all
         ss = @unit.storage.db[:florist_transitions].all
+        xs = @unit.storage.db[:florist_transitions_assignments].all
         as = @unit.storage.db[:florist_assignments].all
 
         expect(ts.size).to eq(1)
         expect(ss.size).to eq(1)
+        expect(xs.size).to eq(1)
         expect(as.size).to eq(1)
 
-        t, s, a = ts.first, ss.first, as.first
+        t, s, x, a = [ ts, ss, xs, as ].collect(&:first)
 
         expect(t[:exid]).to eq(r['exid'])
         expect(t[:nid]).to eq(r['nid'])
@@ -159,7 +171,11 @@ describe '::Florist' do
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('allocated')
 
-        expect(a[:transition_id]).to eq(s[:id])
+        expect(x[:task_id]).to eq(t[:id])
+        expect(x[:transition_id]).to eq(s[:id])
+        expect(x[:assignment_id]).to eq(a[:id])
+        expect(x[:status]).to eq('active')
+
         expect(a[:resource_type]).to eq('user')
         expect(a[:resource_name]).to eq('Alice')
         expect(a[:status]).to eq('active')
@@ -187,13 +203,15 @@ describe '::Florist' do
 
         ts = @unit.storage.db[:florist_tasks].all
         ss = @unit.storage.db[:florist_transitions].all
+        xs = @unit.storage.db[:florist_transitions_assignments].all
         as = @unit.storage.db[:florist_assignments].all
 
         expect(ts.size).to eq(1)
         expect(ss.size).to eq(1)
+        expect(xs.size).to eq(1)
         expect(as.size).to eq(1)
 
-        t, s, a = ts.first, ss.first, as.first
+        t, s, x, a = [ ts, ss, xs, as ].collect(&:first)
 
         expect(t[:exid]).to eq(r['exid'])
         expect(t[:nid]).to eq(r['nid'])
@@ -206,7 +224,11 @@ describe '::Florist' do
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('offered')
 
-        expect(a[:transition_id]).to eq(s[:id])
+        expect(x[:task_id]).to eq(t[:id])
+        expect(x[:transition_id]).to eq(s[:id])
+        expect(x[:assignment_id]).to eq(a[:id])
+        expect(x[:status]).to eq('active')
+
         expect(a[:resource_type]).to eq('user')
         expect(a[:resource_name]).to eq('margaret')
         expect(a[:status]).to eq('active')
@@ -234,13 +256,15 @@ describe '::Florist' do
 
         ts = @unit.storage.db[:florist_tasks].all
         ss = @unit.storage.db[:florist_transitions].all
+        xs = @unit.storage.db[:florist_transitions_assignments].all
         as = @unit.storage.db[:florist_assignments].all
 
         expect(ts.size).to eq(1)
         expect(ss.size).to eq(1)
+        expect(xs.size).to eq(1)
         expect(as.size).to eq(1)
 
-        t, s, a = ts.first, ss.first, as.first
+        t, s, x, a = [ ts, ss, xs, as ].collect(&:first)
 
         expect(t[:exid]).to eq(r['exid'])
         expect(t[:nid]).to eq(r['nid'])
@@ -253,7 +277,11 @@ describe '::Florist' do
         expect(s[:task_id]).to eq(t[:id])
         expect(s[:state]).to eq('allocated')
 
-        expect(a[:transition_id]).to eq(s[:id])
+        expect(x[:task_id]).to eq(t[:id])
+        expect(x[:transition_id]).to eq(s[:id])
+        expect(x[:assignment_id]).to eq(a[:id])
+        expect(x[:status]).to eq('active')
+
         expect(a[:resource_type]).to eq('role')
         expect(a[:resource_name]).to eq('rm')
         expect(a[:status]).to eq('active')

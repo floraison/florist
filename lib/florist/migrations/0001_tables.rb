@@ -1,17 +1,21 @@
 
 Sequel.migration do
 
-  # +------+                             * a task is in the state of its
-  # | task |-1--+                          last transition
-  # +------+    |                        * a transition may have 0 or more
-  #             | 1 or more                assignments
-  #      +------+-----+
-  #      | transition |-1---+
-  #      +------------+     |
-  #                         | 0 or more
-  #                  +------+-----+
-  #                  | assignment |
-  #                  +------------+
+  # +------+  * a task is in the state of its last transition
+  # | task |
+  # +--+---+
+  #    |
+  # +--+---------+  * a transition may have 0 or more assignments
+  # | transition |
+  # +--+---------+
+  #    |
+  # +--+--------------------+
+  # | transition-assignment |
+  # +--+--------------------+
+  #    |
+  # +--+---------+  * an assignment is linked to 1 or more transitions
+  # | assignment |
+  # +------------+
 
   up do
 
@@ -57,16 +61,17 @@ Sequel.migration do
         # "suspended"
         # "failed"
         # "completed"
+        #
+        # "archived"
 
       String :name, null: false
         #
         # http://www.workflowpatterns.com/patterns/resource/#fig6
         #
         # "create", "offer", "allocate", "start", "fail"
-        # and also
+        #   and also
         # "suspend", "resume", "escalate", "delegate", "deallocate",
         # "skip"
-
 
       String :description
 
@@ -79,15 +84,34 @@ Sequel.migration do
       String :ctime, null: false  # creation time
       String :mtime, null: false  # last modification time
 
+      String :status, null: false  # "active" or something else
+
       index :task_id
+    end
+
+    create_table :florist_transitions_assignments do
+
+      Integer :task_id, null: false
+
+      Integer :transition_id, null: false
+      Integer :assignment_id, null: false
+
+      String :ctime, null: false  # creation time
+      String :mtime, null: false  # last modification time
+
+      String :status, null: false  # "active" or something else
+
+      unique [ :task_id, :transition_id, :assignment_id ]
+
+      index :task_id
+      index :assignment_id
     end
 
     create_table :florist_assignments do
 
       primary_key :id
 
-      #Integer :task_id, null: false
-      Integer :transition_id, null: false
+      Integer :task_id, null: false
 
       String :resource_type, null: false  # "user", "group", "role", ...
       String :resource_name, null: false  # "bob", "accounting"
@@ -99,13 +123,11 @@ Sequel.migration do
       String :ctime, null: false  # creation time, Flor.tstamp
       String :mtime, null: false  # last modification time, Flor.tstamp
 
-      String :status, null: false
-        # "active" or something else
+      String :status, null: false  # "active" or something else
 
-      unique [ :transition_id, :resource_type, :resource_name ]
+      unique [ :task_id, :resource_type, :resource_name ]
 
-      #index :task_id
-      index :transition_id
+      index :task_id
       index [ :resource_type, :resource_name ]
     end
   end
@@ -114,6 +136,7 @@ Sequel.migration do
 
     drop_table :florist_tasks
     drop_table :florist_transitions
+    drop_table :florist_transitions_assignments
     drop_table :florist_assignments
   end
 end

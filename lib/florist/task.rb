@@ -132,6 +132,14 @@ class Florist::Task < ::Florist::FloristModel
     last_transition.assignments
   end
 
+  def all_assignments
+
+    worklist.assignment_table
+      .where(task_id: id)
+      .order(:id)
+      .all
+  end
+
   #
   # transition 'methods'
 
@@ -228,7 +236,8 @@ class Florist::Task < ::Florist::FloristModel
             domain: opts[:domain] || worklist.domain,
             content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
             ctime: now,
-            mtime: now)
+            mtime: now,
+            status: 'active')
 
       else
 
@@ -243,38 +252,80 @@ class Florist::Task < ::Florist::FloristModel
           if n != 1
       end
 
-      db[:florist_assignments]
-        .import(
-          [ :transition_id, :resource_type, :resource_name, :content,
-            :description, :ctime, :mtime, :status ],
-          assignments.map { |a|
-            [ sid, a[0], a[1], nil,
-              nil, now, now, 'active' ] }
-        ) if assignments.any?
+      if assignments.any?
+
+        ah = all_assignments.inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
+        as = assignments
+
+        old_aids, new_aids = assignments
+          .inject([ [], [] ]) { |(o, n), a|
+            case a
+            when Array
+              if aa = ah[a]
+                o << aa.id
+              else
+                n << insert_assignment(now, a)
+              end
+            when :all
+              o.concat(as.collect(&:id))
+            when :first, :last
+              aa = as.send(a)
+              o << aa.id if aa
+            when Integer
+              aa = ah[a]
+              o << aa.id if aa
+            #else
+              # no new/old assignment id
+            end
+            [ o, n ] }
+
+        db[:florist_assignments]
+          .where(id: old_aids)
+          .update(mtime: now)
+
+        db[:florist_transitions_assignments]
+          .import(
+            [ :task_id, :transition_id, :assignment_id,
+              :ctime, :mtime, :status ],
+            (old_aids + new_aids).collect { |aid|
+              [ id, sid, aid, now, now, 'active' ] })
+      end
     end
+  end
+
+  def insert_assignment(now, (rtype, rname))
+
+    db[:florist_assignments]
+      .insert(
+        task_id: id,
+        resource_type: rtype,
+        resource_name: rname,
+        content: nil,
+        description: nil,
+        ctime: now,
+        mtime: now,
+        status: 'active')
+          # hopefully, your Sequel adapater returns the newly inserted :id
   end
 
   def extract_assignments(as)
 
-    acs = as.collect(&:class)
+    return [ as ] \
+      if as.collect(&:class) == [ String, String ]
 
-    if acs == [ String, String ]
-      [ as ]
-    elsif acs.uniq == [ Array ]
-      as
-        .collect { |a| [ a[0], a[1] ] }
-    elsif acs.uniq == [ Hash ]
-      as
-        .collect { |h|
-          h = Flor.to_string_keyed_hash(h)
-          t = h['resource_type'] || h['rtype'] || 'user'
-          n = h['resource_name'] || h['rname']
-          fail ArgumentError.new("no resource_name in #{h.inspect}") unless n
-          [ t, n ] }
-    else
-      fail ArgumentError.new(
-        "couldn't figure out assignment list out of #{as.inspect}")
-    end
+    as.collect { |a|
+      case a
+      when Array, Integer, :all, :first, :last
+        a
+      when Hash
+        h = Flor.to_string_keyed_hash(a)
+        t = h['resource_type'] || h['rtype'] || 'user'
+        n = h['resource_name'] || h['rname']
+        fail ArgumentError.new("no resource_name in #{h.inspect}") unless n
+        [ t, n ]
+      else
+        fail ArgumentError.new("not an assignment #{a.inspect}")
+      end }
   end
 
   def determine_tname(state)
@@ -297,8 +348,12 @@ class Florist::Transition < ::Florist::FloristModel
 
   def assignments
 
-    worklist.assignment_table
+    aids = worklist.db[:florist_transitions_assignments]
       .where(transition_id: id)
+      .select(:assignment_id)
+
+    worklist.assignment_table
+      .where(id: aids)
       .order(:id)
       .all
   end
@@ -314,6 +369,8 @@ class Florist::Assignment < ::Florist::FloristModel
 
   def rtype; resource_type; end
   def rname; resource_name; end
+
+  def to_ra; [ rtype, rname ]; end
 end
 
 
