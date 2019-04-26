@@ -34,19 +34,11 @@ class Florist::Task < ::Florist::FloristModel
 
   def payload
 
-    @payload ||=
-      latest_transition_payload || message['payload']
+    @flor_model_cache_payload ||=
+      (latest_transition_payload || message['payload'])
   end
 
   alias fields payload
-
-  def refresh
-
-    @payload = nil
-    @transition = nil
-
-    super
-  end
 
   #
   # 'update' methods
@@ -84,21 +76,18 @@ class Florist::Task < ::Florist::FloristModel
 
   def last_transition
 
-    @transition ||=
-      worklist.transition_table
-        .where(task_id: id)
-        .reverse(:id)
-        .first
+    transitions.last
   end
 
   alias transition last_transition
 
   def transitions
 
-    worklist.transition_table
-      .where(task_id: id)
-      .order(:id)
-      .all
+    @flor_model_cache_transitions ||=
+      worklist.transition_table
+        .where(task_id: id, status: 'active')
+        .order(:id)
+        .all
   end
 
   def state
@@ -123,10 +112,11 @@ class Florist::Task < ::Florist::FloristModel
 
   def all_assignments
 
-    worklist.assignment_table
-      .where(task_id: id)
-      .order(:id)
-      .all
+    @flor_model_cache_all_assignments ||=
+      worklist.assignment_table
+        .where(task_id: id, status: 'active')
+        .order(:id)
+        .all
   end
 
   #
@@ -182,10 +172,9 @@ class Florist::Task < ::Florist::FloristModel
 
     k = key.to_s
 
-    worklist.transition_table
-      .select(:id, :content)
-      .where(task_id: id).exclude(content: nil)
-      .reverse(:id)
+    transitions
+      .reverse
+      .select { |s| s.data }
       .each { |s| s.data.each { |e| return e[k] if e.has_key?(k) } }
 
     nil

@@ -13,18 +13,16 @@ class Florist::Assignment < ::Florist::FloristModel
 
   def transitions
 
-    worklist.transition_table
-      .where(id: transition_ids)
-      .order(:id)
-      .all
+    @flor_model_cache_transitions ||=
+      worklist.transition_table
+        .where(id: transition_ids, status: 'active')
+        .order(:id)
+        .all
   end
 
   def last_transition
 
-    worklist.transition_table
-      .where(id: transition_ids)
-      .reverse(:id)
-      .first
+    transitions.last
   end
 
   def to_h

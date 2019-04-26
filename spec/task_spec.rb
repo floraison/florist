@@ -556,7 +556,7 @@ describe '::Florist' do
             t.allocate('user', 'david', payload: t.payload.merge(name: 'xen'))
             t.refresh
 
-            d = t.transition._data
+            d = t.transition.send(:_data)
 
             expect(d.size).to eq(2)
 
