@@ -175,6 +175,18 @@ class Florist::Task < ::Florist::FloristModel
 #  end
 #  alias reply_with_error return_error
 
+  def to_h
+
+    h = super
+    h[:state] = state
+    h[:transitions] = transitions.collect(&:to_h)
+    h[:assignments] = all_assignments.collect(&:to_h)
+    h[:current_assignment_ids] = assignments.collect(&:id);
+    h[:last_transition_id] = assignments.collect(&:id);
+
+    h
+  end
+
   protected
 
   def latest_transition_content(key)
@@ -371,6 +383,14 @@ class Florist::Transition < ::Florist::FloristModel
     assignments.first
   end
 
+  def to_h
+
+    h = super()
+    h[:assignments] = assignments.collect(&:id)
+
+    h
+  end
+
   protected
 
   def assignment_ids
@@ -397,7 +417,7 @@ class Florist::Assignment < ::Florist::FloristModel
   def transitions
 
     worklist.transition_table
-      .where(task_id: transition_ids)
+      .where(id: transition_ids)
       .order(:id)
       .all
   end
@@ -405,9 +425,18 @@ class Florist::Assignment < ::Florist::FloristModel
   def last_transition
 
     worklist.transition_table
-      .where(task_id: transition_ids)
+      .where(id: transition_ids)
       .reverse(:id)
       .first
+  end
+
+  def to_h
+
+    h = super
+    h[:transition_ids] = transitions.collect(&:id)
+    h[:last_transition_id] = h[:transition_ids].last
+
+    h
   end
 
   protected
@@ -416,7 +445,7 @@ class Florist::Assignment < ::Florist::FloristModel
 
     db[:florist_transitions_assignments]
       .where(assignment_id: id, status: 'active')
-      .select(:task_id)
+      .select(:transition_id)
   end
 end
 

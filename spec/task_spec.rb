@@ -136,6 +136,47 @@ describe '::Florist' do
       end
     end
 
+    context 'misc' do
+
+      before :each do
+
+        @unit.add_tasker(
+          'alice',
+          class: Florist::WorklistTasker,
+          include_vars: true)
+
+        @r = @unit.launch(
+          %q{
+            sequence
+              set v0 'hello'
+              set v1 2345
+              alice 'send message' addressee: 'bob'
+          },
+          payload: { 'kilroy' => 'was here' },
+          wait: 'task')
+
+        wait_until { @unit.executions.count == 1 }
+      end
+
+      describe '#to_h' do
+
+        it 'returns a JSON-friendly representation' do
+
+          t = @worklist.tasks.first
+          t.allocate('user', 'zed')
+          t.refresh
+
+          h = t.to_h
+
+          expect(h[:id]).to eq(t.id)
+          expect(h[:state]).to eq('allocated')
+          expect(h[:status]).to eq('active')
+          expect(h[:transitions].count).to eq(2)
+          expect(h[:assignments].count).to eq(1)
+        end
+      end
+    end
+
     context 'environment accessors' do
 
       before :each do
@@ -390,9 +431,9 @@ describe '::Florist' do
           expect(t.all_assignments.collect { |a| a.task.id }
             ).to eq([ t.id, t.id, t.id ])
           expect(t.all_assignments.collect { |a| a.last_transition.id }
-            ).to eq([ sid2, sid2, sid2 ])
+            ).to eq([ sid1, sid1, sid2 ])
           expect(t.all_assignments.collect { |a| a.transitions.collect(&:id) }
-            ).to eq([ [ sid0, sid1, sid2 ] ] * 3)
+            ).to eq([ [ sid1 ], [ sid1 ], [ sid2 ] ])
         end
       end
     end
@@ -599,6 +640,18 @@ describe '::Florist' do
       describe '#transition_to_started / #start' do
 
         it 'marks the task as started'
+#
+#          t = @worklist.task_table.first
+#
+#          t.offer('user', 'bob')
+#          t.refresh
+#pp t.to_h
+#p t.assignment
+#
+#          #t.start('
+#        end
+
+        it 'marks the task as started and defaults to the last assignment'
       end
 
       describe '#transition_to_suspended / #suspend' do
