@@ -50,7 +50,8 @@ FROM?=nil
 #	$(RUBY) -Ilib -e "require 'flor/unit'; Flor::Unit.new('envs/$(FLOR_ENV)/etc/conf.json').storage.migrate($(TO), $(FROM))"
 
 clean:
-	rm flor_*.dump
+	rm -f flor_*.dump
+	rm -f tmp/florist_*.db
 
 
 .PHONY: \
