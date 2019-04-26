@@ -202,6 +202,8 @@ class Florist::Task < ::Florist::FloristModel
 
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
 
+    sid = nil
+
     db.transaction do
 
       now = Flor.tstamp
@@ -214,8 +216,8 @@ class Florist::Task < ::Florist::FloristModel
       met = opts[:meta]
       meta.merge!(met) if met  # TODO spec me
 
-      s = last_transition
-      sid = s.id
+      lt = last_transition
+      sid = lt.id
 
       n = db[:florist_tasks]
         .where(id: id, mtime: mtime)
@@ -224,7 +226,7 @@ class Florist::Task < ::Florist::FloristModel
       fail Florist::ConflictError('task outdated, update failed') \
         if n != 1
 
-      if s.state != state
+      if lt.state != state || (opts[:force] || opts[:override])
 
         sid = db[:florist_transitions]
           .insert(
@@ -242,10 +244,10 @@ class Florist::Task < ::Florist::FloristModel
       else
 
         cols = { mtime: now }
-        cols[:content] = Flor.to_blob((s._data || []) << meta) if meta.size > 1
+        cols[:content] = Flor.to_blob((lt._data || []) << meta) if meta.size > 1
 
         n = db[:florist_transitions]
-          .where(id: sid, mtime: s.mtime)
+          .where(id: sid, mtime: lt.mtime)
           .update(cols)
 
         fail Florist::ConflictError("task transition outdated, update failed") \
@@ -279,6 +281,8 @@ class Florist::Task < ::Florist::FloristModel
             end
             [ o, n ] }
 
+# TODO .where(id: old_aid0, mtime: old_mtime0)
+#      fail if update_count != old_aids_count
         db[:florist_assignments]
           .where(id: old_aids)
           .update(mtime: now)
@@ -291,6 +295,8 @@ class Florist::Task < ::Florist::FloristModel
               [ id, sid, aid, now, now, 'active' ] })
       end
     end
+
+    sid
   end
 
   def insert_assignment(now, (rtype, rname))
@@ -354,12 +360,8 @@ class Florist::Transition < ::Florist::FloristModel
 
   def assignments
 
-    aids = worklist.db[:florist_transitions_assignments]
-      .where(transition_id: id)
-      .select(:assignment_id)
-
     worklist.assignment_table
-      .where(id: aids)
+      .where(id: assignment_ids)
       .order(:id)
       .all
   end
@@ -367,6 +369,15 @@ class Florist::Transition < ::Florist::FloristModel
   def assignment
 
     assignments.first
+  end
+
+  protected
+
+  def assignment_ids
+
+    db[:florist_transitions_assignments]
+      .where(transition_id: id, status: 'active')
+      .select(:assignment_id)
   end
 end
 
@@ -377,6 +388,36 @@ class Florist::Assignment < ::Florist::FloristModel
   def rname; resource_name; end
 
   def to_ra; [ rtype, rname ]; end
+
+  def task
+
+    worklist.task_table[id: task_id]
+  end
+
+  def transitions
+
+    worklist.transition_table
+      .where(task_id: transition_ids)
+      .order(:id)
+      .all
+  end
+
+  def last_transition
+
+    worklist.transition_table
+      .where(task_id: transition_ids)
+      .reverse(:id)
+      .first
+  end
+
+  protected
+
+  def transition_ids
+
+    db[:florist_transitions_assignments]
+      .where(assignment_id: id, status: 'active')
+      .select(:task_id)
+  end
 end
 
 

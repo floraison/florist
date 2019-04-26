@@ -345,17 +345,54 @@ describe '::Florist' do
 
           t = @worklist.task_table.first
 
-          t.offer('user', 'warwick')
+          t.offer('user', 'giraud')
           t.refresh
-          t.offer('user', 'percy')
+          t.allocate('user', 'warwick')
+          t.refresh
+          t.allocate('user', 'percy')
           t.refresh
 
           as = t.assignments
+
+          expect(as.size).to eq(2)
 
           expect(as[0].rtype).to eq('user')
           expect(as[0].rname).to eq('warwick')
           expect(as[1].rtype).to eq('user')
           expect(as[1].rname).to eq('percy')
+
+          expect(t.transitions.size
+            ).to eq(3)
+          expect(t.transitions.collect(&:state)
+            ).to eq(%w[ created offered allocated ])
+
+          expect(t.last_transition.state).to eq('allocated')
+        end
+      end
+
+      describe '#all_assignments' do
+
+        it 'returns all the assignments, whatever the transition' do
+
+          t = @worklist.task_table.first
+
+          sid0 = t.last_transition.id
+
+          sid1 = t.offer('user', 'warwick')
+          t.refresh
+          sid1b = t.offer('user', 'percy')
+          t.refresh
+          sid2 = t.allocate('user', 'fluellen')
+          t.refresh
+
+          expect(sid1b).to eq(sid1)
+
+          expect(t.all_assignments.collect { |a| a.task.id }
+            ).to eq([ t.id, t.id, t.id ])
+          expect(t.all_assignments.collect { |a| a.last_transition.id }
+            ).to eq([ sid2, sid2, sid2 ])
+          expect(t.all_assignments.collect { |a| a.transitions.collect(&:id) }
+            ).to eq([ [ sid0, sid1, sid2 ] ] * 3)
         end
       end
     end
@@ -377,6 +414,58 @@ describe '::Florist' do
         wait_until { @worklist.tasks.count == 1 }
       end
 
+      describe 'a transition to the same state' do
+
+        it 'reuses the current transition' do
+
+          t = @worklist.task_table.first
+
+          sid0 = t.allocate('user', 'charly')
+          t.refresh
+          sid1 = t.allocate('user', 'bob')
+          t.refresh
+
+          expect(sid0).not_to eq(nil)
+          expect(sid1).to eq(sid0)
+          expect(@worklist.transition_table[sid0].state).to eq('allocated')
+        end
+
+        it 'creates a new transition if `force: true`' do
+
+          t = @worklist.task_table.first
+
+          sid0 = t.allocate('user', 'charly')
+          t.refresh
+          sid1 = t.allocate('user', 'bob', force: true)
+          t.refresh
+
+          expect(sid0).not_to eq(nil)
+          expect(sid1).not_to eq(nil)
+          expect(sid1).not_to eq(sid0)
+          expect(@worklist.transition_table[sid0].state).to eq('allocated')
+          expect(@worklist.transition_table[sid1].state).to eq('allocated')
+        end
+      end
+
+      describe 'a transition to the another state' do
+
+        it 'creates a new transition' do
+
+          t = @worklist.task_table.first
+
+          sid0 = t.offer('user', 'orson')
+          t.refresh
+          sid1 = t.allocate('user', 'alice')
+          t.refresh
+
+          expect(sid0).not_to eq(nil)
+          expect(sid1).not_to eq(nil)
+          expect(sid1).not_to eq(sid0)
+          expect(@worklist.transition_table[sid0].state).to eq('offered')
+          expect(@worklist.transition_table[sid1].state).to eq('allocated')
+        end
+      end
+
       describe '#transition_to_allocated / #allocate' do
 
         it 'adds an "allocated" transition to the task' do
@@ -386,9 +475,10 @@ describe '::Florist' do
           expect(t.tname).to eq('create')
           expect(t.state).to eq('created')
 
-          t.allocate('user', 'charly')
+          sid = t.allocate('user', 'charly')
           t.refresh
 
+          expect(t.last_transition.id).to eq(sid)
           expect(t.tname).to eq('allocate')
           expect(t.state).to eq('allocated')
 
