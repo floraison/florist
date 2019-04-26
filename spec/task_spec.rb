@@ -450,6 +450,7 @@ describe '::Florist' do
           %q{
             bob 'send message'
           },
+          domain: 'org.acme',
           wait: 'task')
 
         wait_until { @worklist.tasks.count == 1 }
@@ -494,16 +495,28 @@ describe '::Florist' do
 
           t = @worklist.task_table.first
 
-          sid0 = t.offer('user', 'orson')
+          sid0 = t.last_transition.id
+          sid1 = t.offer('user', 'orson')
           t.refresh
-          sid1 = t.allocate('user', 'alice')
+          sid2 = t.allocate('user', 'alice')
           t.refresh
 
           expect(sid0).not_to eq(nil)
           expect(sid1).not_to eq(nil)
-          expect(sid1).not_to eq(sid0)
-          expect(@worklist.transition_table[sid0].state).to eq('offered')
-          expect(@worklist.transition_table[sid1].state).to eq('allocated')
+          expect(sid2).not_to eq(nil)
+          expect(sid2).not_to eq(sid0)
+
+          s0 = @worklist.transition_table[sid0]
+          s1 = @worklist.transition_table[sid1]
+          s2 = @worklist.transition_table[sid2]
+
+          expect(s0.state).to eq('created')
+          expect(s1.state).to eq('offered')
+          expect(s2.state).to eq('allocated')
+
+          expect(s0.domain).to eq('org.acme')
+          expect(s1.domain).to eq('org.acme')
+          expect(s2.domain).to eq('org.acme')
         end
       end
 

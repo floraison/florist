@@ -56,14 +56,14 @@ class Florist::Task < ::Florist::FloristModel
       n = db[:florist_tasks]
         .where(id: id, mtime: mtime)
         .update(mtime: now)
-
+          #
       fail Florist::ConflictError("task outdated, update failed") \
         if n != 1
 
       n = db[:florist_transitions]
         .where(id: s.id, mtime: s.mtime)
         .update(content: Flor.to_blob(c), mtime: now)
-
+          #
       fail Florist::ConflictError("task transitions outdated, update failed") \
         if n != 1
     end
@@ -212,7 +212,7 @@ class Florist::Task < ::Florist::FloristModel
       n = db[:florist_tasks]
         .where(id: id, mtime: mtime)
         .update(mtime: now)
-
+          #
       fail Florist::ConflictError('task outdated, update failed') \
         if n != 1
 
@@ -225,7 +225,7 @@ class Florist::Task < ::Florist::FloristModel
             state: state,
             description: nil,
             user: opts[:user] || worklist.user,
-            domain: opts[:domain] || worklist.domain, # FIXME
+            domain: opts[:domain] || lt.domain,
             content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
             ctime: now,
             mtime: now,
@@ -239,7 +239,7 @@ class Florist::Task < ::Florist::FloristModel
         n = db[:florist_transitions]
           .where(id: sid, mtime: lt.mtime)
           .update(cols)
-
+            #
         fail Florist::ConflictError("task transition outdated, update failed") \
           if n != 1
       end
@@ -284,7 +284,7 @@ class Florist::Task < ::Florist::FloristModel
         .inject(db[:florist_assignments]) { |q, a|
           q.where(id: a.id, mtime: a.mtime) }
         .update(mtime: now)
-
+          #
       fail Florist::ConflictError("task outdated, transition update failed") \
         if n != old_as.size
     end
