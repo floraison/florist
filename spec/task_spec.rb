@@ -456,6 +456,21 @@ describe '::Florist' do
         wait_until { @worklist.tasks.count == 1 }
       end
 
+      it 'fails if the task changed meanwhile' do
+
+        ta = @worklist.task_table.first
+        tb = @worklist.task_table.first
+
+        ta.allocate('user', 'charly')
+        ta.refresh
+
+        expect {
+          tb.allocate('user', 'david')
+        }.to raise_error(
+          Florist::ConflictError, 'task outdated, update failed'
+        )
+      end
+
       describe 'a transition to the same state' do
 
         it 'reuses the current transition' do

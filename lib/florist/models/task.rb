@@ -57,14 +57,14 @@ class Florist::Task < ::Florist::FloristModel
         .where(id: id, mtime: mtime)
         .update(mtime: now)
           #
-      fail Florist::ConflictError("task outdated, update failed") \
+      fail Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
 
       n = db[:florist_transitions]
         .where(id: s.id, mtime: s.mtime)
         .update(content: Flor.to_blob(c), mtime: now)
           #
-      fail Florist::ConflictError("task transitions outdated, update failed") \
+      fail Florist::ConflictError, 'task transitions outdated, update failed' \
         if n != 1
     end
 
@@ -213,7 +213,7 @@ class Florist::Task < ::Florist::FloristModel
         .where(id: id, mtime: mtime)
         .update(mtime: now)
           #
-      fail Florist::ConflictError('task outdated, update failed') \
+      fail Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
 
       if lt.state != state || (opts[:force] || opts[:override])
@@ -240,7 +240,7 @@ class Florist::Task < ::Florist::FloristModel
           .where(id: sid, mtime: lt.mtime)
           .update(cols)
             #
-        fail Florist::ConflictError("task transition outdated, update failed") \
+        fail Florist::ConflictError, 'task transition outdated, update failed' \
           if n != 1
       end
 
@@ -285,7 +285,7 @@ class Florist::Task < ::Florist::FloristModel
           q.where(id: a.id, mtime: a.mtime) }
         .update(mtime: now)
           #
-      fail Florist::ConflictError("task outdated, transition update failed") \
+      fail Florist::ConflictError, 'task outdated, transition update failed' \
         if n != old_as.size
     end
 
