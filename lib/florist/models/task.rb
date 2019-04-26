@@ -194,17 +194,17 @@ class Florist::Task < ::Florist::FloristModel
 
     sid = nil
 
+    now = Flor.tstamp
+
+    meta = { tstamp: now }
+      #
+    pl = opts[:payload] || opts[:fields]
+    meta[:payload] = pl if pl
+      #
+    met = opts[:meta]
+    meta.merge!(met) if met  # TODO spec me
+
     db.transaction do
-
-      now = Flor.tstamp
-
-      meta = { tstamp: now }
-        #
-      pl = opts[:payload] || opts[:fields]
-      meta[:payload] = pl if pl
-        #
-      met = opts[:meta]
-      meta.merge!(met) if met  # TODO spec me
 
       lt = last_transition
       sid = lt.id
@@ -225,7 +225,7 @@ class Florist::Task < ::Florist::FloristModel
             state: state,
             description: nil,
             user: opts[:user] || worklist.user,
-            domain: opts[:domain] || worklist.domain,
+            domain: opts[:domain] || worklist.domain, # FIXME
             content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
             ctime: now,
             mtime: now,
@@ -244,49 +244,58 @@ class Florist::Task < ::Florist::FloristModel
           if n != 1
       end
 
-      if assignments.any?
-
-        ah = all_assignments.inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
-        as = assignments
-
-        old_aids, new_aids = assignments
-          .inject([ [], [] ]) { |(o, n), a|
-            case a
-            when Array
-              if aa = ah[a]
-                o << aa.id
-              else
-                n << insert_assignment(now, a)
-              end
-            when :all
-              o.concat(as.collect(&:id))
-            when :first, :last
-              aa = as.send(a)
-              o << aa.id if aa
-            when Integer
-              aa = ah[a]
-              o << aa.id if aa
-            #else
-              # no new/old assignment id
-            end
-            [ o, n ] }
-
-# TODO .where(id: old_aid0, mtime: old_mtime0)
-#      fail if update_count != old_aids_count
-        db[:florist_assignments]
-          .where(id: old_aids)
-          .update(mtime: now)
-
-        db[:florist_transitions_assignments]
-          .import(
-            [ :task_id, :transition_id, :assignment_id,
-              :ctime, :mtime, :status ],
-            (old_aids + new_aids).collect { |aid|
-              [ id, sid, aid, now, now, 'active' ] })
-      end
+      update_assignments(now, sid, assignments) \
+        if assignments.any?
     end
 
     sid
+  end
+
+  def update_assignments(now, transition_id, assignments)
+
+    ah = all_assignments
+      .inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
+
+    old_as, new_aids = assignments
+      .inject([ [], [] ]) { |(o, n), a|
+        case a
+        when Array
+          if aa = ah[a]
+            o << aa
+          else
+            n << insert_assignment(now, a)
+          end
+        when :all
+          o.concat(assignments)
+        when :first, :last
+          aa = assignments.send(a)
+          o << aa if aa
+        when Integer
+          aa = ah[a]
+          o << aa if aa
+        #else
+          # no new/old assignment id
+        end
+        [ o, n ] }
+
+    if old_as.any?
+
+      n = old_as
+        .inject(db[:florist_assignments]) { |q, a|
+          q.where(id: a.id, mtime: a.mtime) }
+        .update(mtime: now)
+
+      fail Florist::ConflictError("task outdated, transition update failed") \
+        if n != old_as.size
+    end
+
+    db[:florist_transitions_assignments]
+      .import(
+        [ :task_id, :transition_id, :assignment_id,
+          :ctime, :mtime, :status ],
+        (old_as.collect(&:id) + new_aids).collect { |aid|
+          [ id, transition_id, aid,
+            now, now, 'active' ] })
   end
 
   def insert_assignment(now, (rtype, rname))
