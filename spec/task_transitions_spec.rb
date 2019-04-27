@@ -489,8 +489,40 @@ describe '::Florist' do
       end
 
       describe '#transition_to_suspended / #suspend' do
-        it 'marks the task as suspended'
+
+        it 'fails if the task is not started' do
+
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob', r: true)
+
+          expect {
+            t.suspend
+          }.to raise_error(
+            Florist::ConflictError,
+            "cannot change task #{t.id} to \"started\" " +
+            "because it is currently \"offered\""
+          )
+        end
+
+        it 'marks the task as suspended' do
+
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob', r: true)
+          t.start(r: true)
+          t.suspend(r: true)
+
+          expect(t.transitions.count).to eq(4)
+          expect(t.state).to eq('suspended')
+
+          a = t.assignment
+
+          expect(a.transitions.count).to eq(3)
+          expect(a.rname).to eq('bob')
+        end
       end
+
       describe '#transition_to_failed / #fail' do
         it 'marks the task as failed and replies to the execution'
         context 'reply: false' do
@@ -502,6 +534,15 @@ describe '::Florist' do
         context 'reply: false' do
           it 'marks the task as completed but does not reply'
         end
+      end
+    end
+
+    context 'more transitions' do
+
+      describe '#resume' do
+
+        it 'fails if the task is not paused'
+        it 'brings back the task to started'
       end
     end
 

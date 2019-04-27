@@ -137,9 +137,25 @@ class Florist::Task < ::Florist::FloristModel
     transition_and_or_assign('started', *as)
   end
 
+  def transition_to_suspended(*as)
+
+    ensure_state_is('started')
+
+    transition_and_or_assign('suspended', *as)
+  end
+
   alias offer transition_to_offered
   alias allocate transition_to_allocated
   alias start transition_to_started
+  alias suspend transition_to_suspended
+
+  def ensure_state_is(s)
+
+    fail Florist::ConflictError.new(
+      "cannot change task #{id} to #{s.inspect} " +
+      "because it is currently #{state.inspect}"
+    ) if state != s
+  end
 
 #  def return(opts={})
 #
