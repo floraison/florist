@@ -132,8 +132,14 @@ class Florist::Task < ::Florist::FloristModel
     transition_and_or_assign('allocated', *as)
   end
 
+  def transition_to_started(*as)
+
+    transition_and_or_assign('started', *as)
+  end
+
   alias offer transition_to_offered
   alias allocate transition_to_allocated
+  alias start transition_to_started
 
 #  def return(opts={})
 #

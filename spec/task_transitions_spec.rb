@@ -471,19 +471,21 @@ describe '::Florist' do
 
       describe '#transition_to_started / #start' do
 
-        it 'marks the task as started'
-#
-#          t = @worklist.tasks.first
-#
-#          t.offer('user', 'bob')
-#          t.refresh
-#pp t.to_h
-#p t.assignment
-#
-#          #t.start('
-#        end
+        it 'marks the task as started' do
 
-        it 'marks the task as started and defaults to the last assignment'
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob', r: true)
+          t.start(r: true)
+
+          s = t.transition
+
+          expect(s.assignments.size).to eq(1)
+          expect(s.assignment.rname).to eq('bob')
+
+          expect(s.assignment.transitions.collect(&:state)
+            ).to eq(%w[ offered started ])
+        end
       end
 
       describe '#transition_to_suspended / #suspend' do
