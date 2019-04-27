@@ -278,6 +278,10 @@ class Florist::Task < ::Florist::FloristModel
         when Integer
           aa = ah[a]
           o << aa if aa
+        when Florist::Assignment
+          fail ArgumentError, "assignment #{a.id} not linked to task #{id}" \
+            unless ah[a.id]
+          o << a
         #else
           # no new/old assignment id
         end
@@ -330,7 +334,7 @@ class Florist::Task < ::Florist::FloristModel
 
     as.collect { |a|
       case a
-      when Array, Integer, :all, :current, :first, :last
+      when Array, Integer, :all, :current, :first, :last, Florist::Assignment
         a
       when Hash
         h = Flor.to_string_keyed_hash(a)

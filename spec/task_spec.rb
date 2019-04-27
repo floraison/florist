@@ -668,8 +668,41 @@ describe '::Florist' do
 
         describe '{assignment}' do
 
-          it 'fails if the assignment is not linked to the task'
-          it 'reuses the given assignment'
+          it 'fails if the assignment is not linked to the task' do
+
+            t0 = @worklist.task_table.order(:id).first
+
+            exid1 = @unit.launch(%q{ bob _ })
+            t1 = wait_until { @worklist.task_table[exid: exid1] }
+
+            t0.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            t1.allocate([ 'user', 'alice' ])
+            a = @worklist.assignment_table.reverse(:id).first
+
+            expect {
+              t0.allocate(a)
+            }.to raise_error(
+              Sequel::DatabaseError,
+              "ArgumentError: assignment #{a.id} not linked to task #{t0.id}"
+            )
+          end
+
+          it 'reuses the given assignment' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            a = @worklist.assignment_table.reverse(:id).first
+            sid2 = t.allocate(a, r: true)
+
+            s1 = @worklist.transition_table[id: sid1]
+            s2 = @worklist.transition_table[id: sid2]
+
+            expect(s1.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice bob ])
+            expect(s2.assignments.collect(&:resource_name)
+              ).to eq(%w[ bob ])
+          end
         end
       end
 
