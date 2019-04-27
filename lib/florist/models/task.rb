@@ -188,7 +188,9 @@ class Florist::Task < ::Florist::FloristModel
   def transition_and_or_assign(state, *as)
 
     opts = is_opts_hash?(as.last) ? as.pop : {}
+
     assignments = extract_assignments(as)
+    assignments << :current if assignments.empty?
 
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
 

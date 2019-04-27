@@ -323,6 +323,22 @@ describe '::Florist' do
         end
       end
 
+      describe 'a transition' do
+
+        it 'defaults to :current' do
+
+          t = @worklist.tasks.first
+
+          sid1 = t.offer('user', 'alice', r: true)
+          sid2 = t.allocate(r: true)
+          s1 = @worklist.transitions[id: sid1]
+          s2 = @worklist.transitions[id: sid2]
+
+          expect(s1.assignments.collect(&:rname)).to eq(%w[ alice ])
+          expect(s2.assignments.collect(&:rname)).to eq(%w[ alice ])
+        end
+      end
+
       describe '#transition_to_allocated / #allocate' do
 
         it 'adds an "allocated" transition to the task' do
