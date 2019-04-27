@@ -84,7 +84,7 @@ class Florist::Task < ::Florist::FloristModel
   def transitions
 
     @flor_model_cache_transitions ||=
-      worklist.transition_table
+      worklist.transition_class
         .where(task_id: id, status: 'active')
         .order(:id)
         .all
@@ -113,7 +113,7 @@ class Florist::Task < ::Florist::FloristModel
   def all_assignments
 
     @flor_model_cache_all_assignments ||=
-      worklist.assignment_table
+      worklist.assignment_class
         .where(task_id: id, status: 'active')
         .order(:id)
         .all
@@ -255,6 +255,8 @@ class Florist::Task < ::Florist::FloristModel
 
   def update_assignments(now, transition_id, assignments)
 
+    assignments = [] if assignments.include?(:none)
+
     aas = all_assignments
     ah = aas.inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
 
@@ -282,6 +284,8 @@ class Florist::Task < ::Florist::FloristModel
           fail ArgumentError, "assignment #{a.id} not linked to task #{id}" \
             unless ah[a.id]
           o << a
+        when Symbol
+          fail ArgumentError, "not an (pseudo-)assignment #{a.inspect}"
         #else
           # no new/old assignment id
         end
@@ -334,7 +338,7 @@ class Florist::Task < ::Florist::FloristModel
 
     as.collect { |a|
       case a
-      when Array, Integer, :all, :current, :first, :last, Florist::Assignment
+      when Array, Integer, Symbol, Florist::Assignment
         a
       when Hash
         h = Flor.to_string_keyed_hash(a)

@@ -8,13 +8,13 @@ class Florist::Assignment < ::Florist::FloristModel
 
   def task
 
-    worklist.task_table[id: task_id]
+    worklist.task_class[id: task_id]
   end
 
   def transitions
 
     @flor_model_cache_transitions ||=
-      worklist.transition_table
+      worklist.transition_class
         .where(id: _transition_ids, status: 'active')
         .order(:id)
         .all

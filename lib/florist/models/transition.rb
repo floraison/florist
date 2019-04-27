@@ -3,8 +3,8 @@ class Florist::Transition < ::Florist::FloristModel
 
   def assignments
 
-    worklist.assignment_table
-      .where(id: assignment_ids)
+    worklist.assignment_class
+      .where(id: assignment_ids, status: 'active')
       .order(:id)
       .all
   end

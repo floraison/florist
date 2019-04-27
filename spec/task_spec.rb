@@ -254,7 +254,7 @@ describe '::Florist' do
 
         it 'returns the last transition seen by the task' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           s = t.transition
 
@@ -266,11 +266,11 @@ describe '::Florist' do
 
         it 'returns the last transition seen by the task (post allocation)' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer('user', 'bob')
 
-          #t = @worklist.task_table.first
+          #t = @worklist.task_class.first
           t.refresh
 
           s = t.transition
@@ -287,7 +287,7 @@ describe '::Florist' do
 
         it 'returns all the transitions seen by the task' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.allocate('role', 'rm')
 
@@ -353,14 +353,14 @@ describe '::Florist' do
 
         it 'returns nil if there are no assignments' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           expect(t.assignment).to eq(nil)
         end
 
         it 'returns the first current assignment' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer('user', 'warwick')
           t.refresh
@@ -378,14 +378,14 @@ describe '::Florist' do
 
         it 'returns [] if none' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           expect(t.assignments).to eq([])
         end
 
         it 'returns the current assignments' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer('user', 'giraud')
           t.refresh
@@ -416,7 +416,7 @@ describe '::Florist' do
 
         it 'returns all the assignments, whatever the transition' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           sid0 = t.last_transition.id
 

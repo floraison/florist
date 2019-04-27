@@ -45,7 +45,7 @@ describe '::Florist' do
 
         l = Florist::Worklist.new(@unit.storage.db)
 
-        expect(l.tasks.count).to eq(1)
+        expect(l.task_ds.count).to eq(1)
         expect(l.tasks.first.class.ancestors).to include(Sequel::Model)
       end
     end

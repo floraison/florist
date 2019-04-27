@@ -33,26 +33,34 @@ class Florist::Worklist
 
     @controller = get_controller
 
-    @task_table =
+    @task_class =
       make_model_class(Florist::Task, :florist_tasks)
-    @transition_table =
+    @transition_class =
       make_model_class(Florist::Transition, :florist_transitions)
-    @assignment_table =
+    @assignment_class =
       make_model_class(Florist::Assignment, :florist_assignments)
 
     @user = opts[:user] || '(florist)'
     @domain = opts[:domain] || ''
   end
 
-  def task_table; @task_table; end
-  def transition_table; @transition_table; end
-  def assignment_table; @assignment_table; end
+  attr_reader :task_class, :transition_class, :assignment_class
+
+  def task_dataset; @db[:florist_tasks]; end
+  def transition_dataset; @db[:florist_transitions]; end
+  def transition_assignment_dataset; @db[:florist_transitions_assignments]; end
+  def assignment_dataset; @db[:florist_assignments]; end
+    #
+  alias task_ds task_dataset
+  alias transition_ds transition_dataset
+  alias transition_assignment_ds transition_assignment_dataset
+  alias assignment_ds assignment_dataset
 
   def tasks(domain=nil, opts={})
 
     @controller.may?(:browse_tasks, domain)
 
-    task_table.all
+    task_class.all
   end
 
   protected

@@ -50,13 +50,13 @@ describe '::Florist' do
           domain: 'org.acme',
           wait: 'task')
 
-        wait_until { @worklist.tasks.count == 1 }
+        wait_until { @worklist.task_ds.count == 1 }
       end
 
       it 'fails if the task changed meanwhile' do
 
-        ta = @worklist.task_table.first
-        tb = @worklist.task_table.first
+        ta = @worklist.task_class.first
+        tb = @worklist.task_class.first
 
         ta.allocate('user', 'charly')
         ta.refresh
@@ -72,7 +72,7 @@ describe '::Florist' do
 
         it 'reuses the current transition' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           sid0 = t.allocate('user', 'charly')
           t.refresh
@@ -81,12 +81,12 @@ describe '::Florist' do
 
           expect(sid0).not_to eq(nil)
           expect(sid1).to eq(sid0)
-          expect(@worklist.transition_table[sid0].state).to eq('allocated')
+          expect(@worklist.transition_class[sid0].state).to eq('allocated')
         end
 
         it 'creates a new transition if `force: true`' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           sid0 = t.allocate('user', 'charly')
           t.refresh
@@ -96,8 +96,8 @@ describe '::Florist' do
           expect(sid0).not_to eq(nil)
           expect(sid1).not_to eq(nil)
           expect(sid1).not_to eq(sid0)
-          expect(@worklist.transition_table[sid0].state).to eq('allocated')
-          expect(@worklist.transition_table[sid1].state).to eq('allocated')
+          expect(@worklist.transition_class[sid0].state).to eq('allocated')
+          expect(@worklist.transition_class[sid1].state).to eq('allocated')
         end
       end
 
@@ -105,7 +105,7 @@ describe '::Florist' do
 
         it 'creates a new transition' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           sid0 = t.last_transition.id
           sid1 = t.offer('user', 'orson')
@@ -118,9 +118,9 @@ describe '::Florist' do
           expect(sid2).not_to eq(nil)
           expect(sid2).not_to eq(sid0)
 
-          s0 = @worklist.transition_table[sid0]
-          s1 = @worklist.transition_table[sid1]
-          s2 = @worklist.transition_table[sid2]
+          s0 = @worklist.transition_class[sid0]
+          s1 = @worklist.transition_class[sid1]
+          s2 = @worklist.transition_class[sid2]
 
           expect(s0.state).to eq('created')
           expect(s1.state).to eq('offered')
@@ -136,14 +136,14 @@ describe '::Florist' do
 
         they 'link assignments to the new transition' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer('user', 'orson')
           t.refresh
           t.allocate(:first)
           t.refresh
 
-          a = @worklist.assignment_table.first
+          a = @worklist.assignment_class.first
 
           expect(a.transitions.collect(&:id)
             ).to eq(t.transitions[1..-1].collect(&:id))
@@ -158,7 +158,7 @@ describe '::Florist' do
 
           it 'reuses all the assignments of the all transitions' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer('user', 'alice', refresh: true)
             t.offer('user', 'bob', r: true)
@@ -168,7 +168,7 @@ describe '::Florist' do
             sid4 = t.allocate(:all, r: true)
 
             expect(
-              @worklist.assignment_table
+              @worklist.assignment_class
                 .order(:id)
                 .collect { |a| [ a.resource_name, a.transition_ids ] }
             ).to eq([
@@ -183,7 +183,7 @@ describe '::Florist' do
 
           it 'reuses all the assignments of the last transition' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer('user', 'alice', refresh: true)
             t.offer('user', 'bob', r: true)
@@ -193,7 +193,7 @@ describe '::Florist' do
             sid4 = t.allocate(:current, r: true)
 
             expect(
-              @worklist.assignment_table
+              @worklist.assignment_class
                 .order(:id)
                 .collect { |a| [ a.resource_name, a.transition_ids ] }
             ).to eq([
@@ -208,13 +208,13 @@ describe '::Florist' do
 
           it 'reuses the first assignment of the current transition' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
             sid2 = t.allocate(:first, r: true)
 
-            s1 = @worklist.transition_table[id: sid1]
-            s2 = @worklist.transition_table[id: sid2]
+            s1 = @worklist.transition_class[id: sid1]
+            s2 = @worklist.transition_class[id: sid2]
 
             expect(s1.assignments.collect(&:resource_name)
               ).to eq(%w[ alice bob ])
@@ -227,13 +227,13 @@ describe '::Florist' do
 
           it 'reuses the last assignment of the current transition' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
             sid2 = t.allocate(:last, r: true)
 
-            s1 = @worklist.transition_table[id: sid1]
-            s2 = @worklist.transition_table[id: sid2]
+            s1 = @worklist.transition_class[id: sid1]
+            s2 = @worklist.transition_class[id: sid2]
 
             expect(s1.assignments.collect(&:resource_name)
               ).to eq(%w[ alice bob ])
@@ -246,14 +246,14 @@ describe '::Florist' do
 
           it 'reuses the given assignment by id' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
-            a = @worklist.assignment_table.reverse(:id).first
+            a = @worklist.assignment_class.reverse(:id).first
             sid2 = t.allocate(a.id, r: true)
 
-            s1 = @worklist.transition_table[id: sid1]
-            s2 = @worklist.transition_table[id: sid2]
+            s1 = @worklist.transition_class[id: sid1]
+            s2 = @worklist.transition_class[id: sid2]
 
             expect(s1.assignments.collect(&:resource_name)
               ).to eq(%w[ alice bob ])
@@ -266,14 +266,14 @@ describe '::Florist' do
 
           it 'fails if the assignment is not linked to the task' do
 
-            t0 = @worklist.task_table.order(:id).first
+            t0 = @worklist.task_class.order(:id).first
 
             exid1 = @unit.launch(%q{ bob _ })
-            t1 = wait_until { @worklist.task_table[exid: exid1] }
+            t1 = wait_until { @worklist.task_class[exid: exid1] }
 
             t0.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
             t1.allocate([ 'user', 'alice' ])
-            a = @worklist.assignment_table.reverse(:id).first
+            a = @worklist.assignment_class.reverse(:id).first
 
             expect {
               t0.allocate(a)
@@ -285,19 +285,40 @@ describe '::Florist' do
 
           it 'reuses the given assignment' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
-            a = @worklist.assignment_table.reverse(:id).first
+            a = @worklist.assignment_class.reverse(:id).first
             sid2 = t.allocate(a, r: true)
 
-            s1 = @worklist.transition_table[id: sid1]
-            s2 = @worklist.transition_table[id: sid2]
+            s1 = @worklist.transition_class[id: sid1]
+            s2 = @worklist.transition_class[id: sid2]
 
             expect(s1.assignments.collect(&:resource_name)
               ).to eq(%w[ alice bob ])
             expect(s2.assignments.collect(&:resource_name)
               ).to eq(%w[ bob ])
+          end
+        end
+
+        describe ':none' do
+
+          it 'forces the new transition to have no assignments' do
+
+            t = @worklist.task_class.first
+
+            sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            sid2 = t.allocate(:none, r: true)
+
+            s1 = @worklist.transition_class[id: sid1]
+            s2 = @worklist.transition_class[id: sid2]
+
+            expect(s1.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice bob ])
+            expect(s2.assignments.collect(&:resource_name)
+              ).to eq(%w[])
+
+            expect(@worklist.assignment_ds.count).to eq(2)
           end
         end
       end
@@ -306,7 +327,7 @@ describe '::Florist' do
 
         it 'adds an "allocated" transition to the task' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           expect(t.tname).to eq('create')
           expect(t.state).to eq('created')
@@ -330,7 +351,7 @@ describe '::Florist' do
 
           it 'places an updated payload in the transition row' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             t.allocate(
               'user', 'charly',
@@ -344,7 +365,7 @@ describe '::Florist' do
 
           it 'places an updated payload in the transition row' do
 
-            t = @worklist.task_table.first
+            t = @worklist.task_class.first
 
             t.allocate('user', 'charly', payload: t.payload.merge(name: 'leo'))
             t.refresh
@@ -367,7 +388,7 @@ describe '::Florist' do
 
         it 'offers the task to a user' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           expect(t.state).to eq('created')
 
@@ -388,7 +409,7 @@ describe '::Florist' do
 
         it 'offers the task to 1 or more users' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer([ 'user', 'charly' ], [ 'user', 'david' ])
           t.refresh
@@ -412,7 +433,7 @@ describe '::Florist' do
 
         it 'offers the task to 1 or more users (2)' do
 
-          t = @worklist.task_table.first
+          t = @worklist.task_class.first
 
           t.offer(
             { rtype: 'user', rname: 'eve' },
@@ -436,7 +457,7 @@ describe '::Florist' do
 
         it 'marks the task as started'
 #
-#          t = @worklist.task_table.first
+#          t = @worklist.task_class.first
 #
 #          t.offer('user', 'bob')
 #          t.refresh
