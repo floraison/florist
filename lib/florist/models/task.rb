@@ -24,12 +24,12 @@ class Florist::Task < ::Florist::FloristModel
 
     exes = db[:flor_executions]
 
-    @execution_class ||=
+    @executions ||=
       Class.new(Flor::Execution) do
         self.dataset = exes
       end
 
-    @execution_class[exid: exid]
+    @executions[exid: exid]
   end
 
   def payload
@@ -84,7 +84,7 @@ class Florist::Task < ::Florist::FloristModel
   def transitions
 
     @flor_model_cache_transitions ||=
-      worklist.transition_class
+      worklist.transitions
         .where(task_id: id, status: 'active')
         .order(:id)
         .all
@@ -113,7 +113,7 @@ class Florist::Task < ::Florist::FloristModel
   def all_assignments
 
     @flor_model_cache_all_assignments ||=
-      worklist.assignment_class
+      worklist.assignments
         .where(task_id: id, status: 'active')
         .order(:id)
         .all

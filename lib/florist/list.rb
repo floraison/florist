@@ -33,18 +33,20 @@ class Florist::Worklist
 
     @controller = get_controller
 
-    @task_class =
-      make_model_class(Florist::Task, :florist_tasks)
-    @transition_class =
-      make_model_class(Florist::Transition, :florist_transitions)
-    @assignment_class =
-      make_model_class(Florist::Assignment, :florist_assignments)
-
     @user = opts[:user] || '(florist)'
     @domain = opts[:domain] || ''
+
+    @tasks =
+      make_model_class(Florist::Task, :florist_tasks)
+    @transitions =
+      make_model_class(Florist::Transition, :florist_transitions)
+    @assignments =
+      make_model_class(Florist::Assignment, :florist_assignments)
+        #
+        # TODO factor in @domain
   end
 
-  attr_reader :task_class, :transition_class, :assignment_class
+  attr_reader :tasks, :transitions, :assignments
 
   def task_dataset; @db[:florist_tasks]; end
   def transition_dataset; @db[:florist_transitions]; end
@@ -56,11 +58,12 @@ class Florist::Worklist
   alias transition_assignment_ds transition_assignment_dataset
   alias assignment_ds assignment_dataset
 
-  def tasks(domain=nil, opts={})
+  def list_tasks(domain=nil, opts={})
 
     @controller.may?(:browse_tasks, domain)
 
     task_class.all
+      # TODO filter by domain
   end
 
   protected
