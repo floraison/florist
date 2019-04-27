@@ -270,7 +270,8 @@ class Florist::Task < ::Florist::FloristModel
         when :all
           o.concat(aas)
         when :current
-fail # TODO
+          lti = last_transition.id
+          o.concat(aas.select { |a| a.transition_ids.include?(lti) })
         when :first, :last
           aa = aas.send(a)
           o << aa if aa
@@ -329,7 +330,7 @@ fail # TODO
 
     as.collect { |a|
       case a
-      when Array, Integer, :all, :first, :last
+      when Array, Integer, :all, :current, :first, :last
         a
       when Hash
         h = Flor.to_string_keyed_hash(a)

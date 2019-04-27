@@ -536,7 +536,7 @@ describe '::Florist' do
         end
       end
 
-      describe ':all, :first, :last pseudo-assignments' do
+      describe ':all, :current, :first, :last pseudo-assignments' do
 
         they 'link assignments to the new transition' do
 
@@ -578,6 +578,31 @@ describe '::Florist' do
             ).to eq([
               [ 'alice', [ sid1, sid4 ] ], [ 'bob', [ sid1, sid4 ] ],
               [ 'celia', [ sid2, sid4 ] ], [ 'david', [ sid2, sid4 ] ],
+              [ 'evan', [ sid3, sid4 ] ], [ 'faye', [ sid3, sid4 ] ],
+            ])
+          end
+        end
+
+        describe ':current' do
+
+          it 'reuses all the assignments of the last transition' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer('user', 'alice', refresh: true)
+            t.offer('user', 'bob', r: true)
+            sid2 = t.allocate([ 'user', 'celia' ], [ 'user', 'david' ], r: true)
+            sid3 = t.offer('user', 'evan', r: true)
+            t.offer('user', 'faye', r: true)
+            sid4 = t.allocate(:current, r: true)
+
+            expect(
+              @worklist.assignment_table
+                .order(:id)
+                .collect { |a| [ a.resource_name, a.transition_ids ] }
+            ).to eq([
+              [ 'alice', [ sid1 ] ], [ 'bob', [ sid1 ] ],
+              [ 'celia', [ sid2 ] ], [ 'david', [ sid2 ] ],
               [ 'evan', [ sid3, sid4 ] ], [ 'faye', [ sid3, sid4 ] ],
             ])
           end
