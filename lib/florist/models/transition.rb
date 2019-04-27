@@ -3,10 +3,16 @@ class Florist::Transition < ::Florist::FloristModel
 
   def assignments
 
-    worklist.assignments
-      .where(id: assignment_ids, status: 'active')
-      .order(:id)
-      .all
+    @flor_model_cache_assignments ||=
+      worklist.assignments
+        .where(id: _assignment_ids, status: 'active')
+        .order(:id)
+        .all
+  end
+
+  def assignment_ids
+
+    assignments.collect(&:id)
   end
 
   def assignment
@@ -24,7 +30,7 @@ class Florist::Transition < ::Florist::FloristModel
 
   protected
 
-  def assignment_ids
+  def _assignment_ids
 
     db[:florist_transitions_assignments]
       .where(transition_id: id, status: 'active')
