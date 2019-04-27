@@ -139,7 +139,7 @@ class Florist::Task < ::Florist::FloristModel
 
   def transition_to_suspended(*as)
 
-    ensure_state_is('started')
+    guard('suspend', 'started')
 
     transition_and_or_assign('suspended', *as)
   end
@@ -149,12 +149,15 @@ class Florist::Task < ::Florist::FloristModel
   alias start transition_to_started
   alias suspend transition_to_suspended
 
-  def ensure_state_is(s)
+  alias pause transition_to_suspended
 
-    fail Florist::ConflictError.new(
-      "cannot change task #{id} to #{s.inspect} " +
-      "because it is currently #{state.inspect}"
-    ) if state != s
+  def resume(*as)
+
+    guard('resume', 'suspended')
+
+    append_option(as, transition_name: 'resume')
+
+    transition_and_or_assign('started', *as)
   end
 
 #  def return(opts={})
@@ -189,6 +192,25 @@ class Florist::Task < ::Florist::FloristModel
   end
 
   protected
+
+  def guard(v, s)
+
+    fail Florist::ConflictError.new(
+      "cannot #{v} task #{id} " +
+      "because it is currently #{state.inspect}, not #{s.inspect}"
+    ) if state != s
+  end
+
+  def append_option(assignments, opts)
+
+    la = assignments.last
+
+    unless is_opts_hash?(la)
+      la = {}; assignments << la
+    end
+
+    opts.each { |k, v| la[k] = v }
+  end
 
   def latest_transition_content(key)
 

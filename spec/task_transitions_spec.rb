@@ -500,8 +500,8 @@ describe '::Florist' do
             t.suspend
           }.to raise_error(
             Florist::ConflictError,
-            "cannot change task #{t.id} to \"started\" " +
-            "because it is currently \"offered\""
+            "cannot suspend task #{t.id} " +
+            "because it is currently \"offered\", not \"started\""
           )
         end
 
@@ -539,10 +539,53 @@ describe '::Florist' do
 
     context 'more transitions' do
 
+      before :each do
+
+        @unit.add_tasker(
+          'bob', Florist::WorklistTasker)
+
+        @r = @unit.launch(
+          %q{ bob 'send message' }, domain: 'org.acme', wait: 'task')
+
+        wait_until { @worklist.task_ds.count == 1 }
+      end
+
       describe '#resume' do
 
-        it 'fails if the task is not paused'
-        it 'brings back the task to started'
+        it 'fails if the task is not paused' do
+
+          t = @worklist.tasks.first
+
+          expect {
+            t.resume
+          }.to raise_error(
+            Florist::ConflictError,
+            "cannot resume task #{t.id} " +
+            "because it is currently \"created\", not \"suspended\""
+          )
+        end
+
+        it 'brings back the task to started' do
+
+          t = @worklist.tasks.first
+
+          t.start('user', 'bob', r: true)
+          t.suspend(r: true)
+          t.resume(r: true)
+
+          expect(t.transitions.count).to eq(4)
+          expect(t.state).to eq('started')
+
+          s = t.last_transition
+
+          expect(s.state).to eq('started')
+          expect(s.name).to eq('resume')
+
+          a = t.assignment
+
+          expect(a.transitions.count).to eq(3)
+          expect(a.rname).to eq('bob')
+        end
       end
     end
 
