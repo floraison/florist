@@ -15,9 +15,14 @@ class Florist::Assignment < ::Florist::FloristModel
 
     @flor_model_cache_transitions ||=
       worklist.transition_table
-        .where(id: transition_ids, status: 'active')
+        .where(id: _transition_ids, status: 'active')
         .order(:id)
         .all
+  end
+
+  def transition_ids
+
+    transitions.collect(&:id)
   end
 
   def last_transition
@@ -36,7 +41,7 @@ class Florist::Assignment < ::Florist::FloristModel
 
   protected
 
-  def transition_ids
+  def _transition_ids
 
     db[:florist_transitions_assignments]
       .where(assignment_id: id, status: 'active')

@@ -158,10 +158,10 @@ class Florist::Task < ::Florist::FloristModel
 
     h = super
     h[:state] = state
-    h[:transitions] = transitions.collect(&:to_h)
+    h[:transitions] = ss = transitions.collect(&:to_h)
     h[:assignments] = all_assignments.collect(&:to_h)
-    h[:current_assignment_ids] = assignments.collect(&:id);
-    h[:last_transition_id] = assignments.collect(&:id);
+    h[:current_assignment_ids] = assignments.collect(&:id)
+    h[:last_transition_id] = ss.last[:id]
 
     h
   end
@@ -248,13 +248,15 @@ class Florist::Task < ::Florist::FloristModel
         if assignments.any?
     end
 
+    refresh if opts[:refresh] || opts[:r]
+
     sid
   end
 
   def update_assignments(now, transition_id, assignments)
 
-    ah = all_assignments
-      .inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
+    aas = all_assignments
+    ah = aas.inject({}) { |r, a| r[a.id] = r[a.to_ra] = a; r }
 
     old_as, new_aids = assignments
       .inject([ [], [] ]) { |(o, n), a|
@@ -266,9 +268,11 @@ class Florist::Task < ::Florist::FloristModel
             n << insert_assignment(now, a)
           end
         when :all
-          o.concat(assignments)
+          o.concat(aas)
+        when :current
+fail # TODO
         when :first, :last
-          aa = assignments.send(a)
+          aa = aas.send(a)
           o << aa if aa
         when Integer
           aa = ah[a]
@@ -280,9 +284,8 @@ class Florist::Task < ::Florist::FloristModel
 
     if old_as.any?
 
-      n = old_as
-        .inject(db[:florist_assignments]) { |q, a|
-          q.where(id: a.id, mtime: a.mtime) }
+      n = db[:florist_assignments]
+        .where { Sequel.|(*old_as.map { |a| { id: a.id, mtime: a.mtime } }) }
         .update(mtime: now)
           #
       fail Florist::ConflictError, 'task outdated, transition update failed' \

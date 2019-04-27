@@ -173,6 +173,7 @@ describe '::Florist' do
           expect(h[:status]).to eq('active')
           expect(h[:transitions].count).to eq(2)
           expect(h[:assignments].count).to eq(1)
+          expect(h[:last_transition_id]).to eq(h[:transitions].last[:id])
         end
       end
     end
@@ -532,6 +533,54 @@ describe '::Florist' do
           expect(s0.domain).to eq('org.acme')
           expect(s1.domain).to eq('org.acme')
           expect(s2.domain).to eq('org.acme')
+        end
+      end
+
+      describe ':all, :first, :last pseudo-assignments' do
+
+        they 'link assignments to the new transition' do
+
+          t = @worklist.task_table.first
+
+          t.offer('user', 'orson')
+          t.refresh
+          t.allocate(:first)
+          t.refresh
+
+          a = @worklist.assignment_table.first
+
+          expect(a.transitions.collect(&:id)
+            ).to eq(t.transitions[1..-1].collect(&:id))
+
+          expect(t.transitions.collect { |s| s.assignments.collect(&:id) }
+            ).to eq([ [], [ a.id ], [ a.id ] ])
+          expect(t.last_transition.id
+            ).to eq(t.transitions.last.id)
+        end
+
+        describe ':all' do
+
+          it 'reuses all the assignments of the all transitions' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer('user', 'alice', refresh: true)
+            t.offer('user', 'bob', r: true)
+            sid2 = t.allocate([ 'user', 'celia' ], [ 'user', 'david' ], r: true)
+            sid3 = t.offer('user', 'evan', r: true)
+            t.offer('user', 'faye', r: true)
+            sid4 = t.allocate(:all, r: true)
+
+            expect(
+              @worklist.assignment_table
+                .order(:id)
+                .collect { |a| [ a.resource_name, a.transition_ids ] }
+            ).to eq([
+              [ 'alice', [ sid1, sid4 ] ], [ 'bob', [ sid1, sid4 ] ],
+              [ 'celia', [ sid2, sid4 ] ], [ 'david', [ sid2, sid4 ] ],
+              [ 'evan', [ sid3, sid4 ] ], [ 'faye', [ sid3, sid4 ] ],
+            ])
+          end
         end
       end
 
