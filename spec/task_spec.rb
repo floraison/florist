@@ -536,7 +536,7 @@ describe '::Florist' do
         end
       end
 
-      describe ':all, :current, :first, :last pseudo-assignments' do
+      describe 'pseudo-assignments' do
 
         they 'link assignments to the new transition' do
 
@@ -606,6 +606,70 @@ describe '::Florist' do
               [ 'evan', [ sid3, sid4 ] ], [ 'faye', [ sid3, sid4 ] ],
             ])
           end
+        end
+
+        describe ':first' do
+
+          it 'reuses the first assignment of the current transition' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            sid2 = t.allocate(:first, r: true)
+
+            s1 = @worklist.transition_table[id: sid1]
+            s2 = @worklist.transition_table[id: sid2]
+
+            expect(s1.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice bob ])
+            expect(s2.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice ])
+          end
+        end
+
+        describe ':last' do
+
+          it 'reuses the last assignment of the current transition' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            sid2 = t.allocate(:last, r: true)
+
+            s1 = @worklist.transition_table[id: sid1]
+            s2 = @worklist.transition_table[id: sid2]
+
+            expect(s1.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice bob ])
+            expect(s2.assignments.collect(&:resource_name)
+              ).to eq(%w[ bob ])
+          end
+        end
+
+        describe '{id}' do
+
+          it 'reuses the given assignment by id' do
+
+            t = @worklist.task_table.first
+
+            sid1 = t.offer([ 'user', 'alice' ], [ 'user', 'bob' ], r: true)
+            a = @worklist.assignment_table.reverse(:id).first
+            sid2 = t.allocate(a.id, r: true)
+
+            s1 = @worklist.transition_table[id: sid1]
+            s2 = @worklist.transition_table[id: sid2]
+
+            expect(s1.assignments.collect(&:resource_name)
+              ).to eq(%w[ alice bob ])
+            expect(s2.assignments.collect(&:resource_name)
+              ).to eq(%w[ bob ])
+          end
+        end
+
+        describe '{assignment}' do
+
+          it 'fails if the assignment is not linked to the task'
+          it 'reuses the given assignment'
         end
       end
 
