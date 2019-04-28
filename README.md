@@ -11,23 +11,33 @@
 It aims to follow the guidance/conventions found at [http://www.workflowpatterns.com/patterns/resource/](http://www.workflowpatterns.com/patterns/resource/).
 
 ```
-                                                            .-----------.
-                                                     ,----->| suspended |
-   .---------.                                .---------.   '-----------'
--->| created |------------------------------->| started |<-----'
-   '---------'               .--------------. '---------' .--------.
-      |    '---------------->| allocated    |   ^ ^ | '-->| failed |
-      |  .-----------------. | (single res) |---' | |     '--------'
+                                                          .-----------.
+                                                      ,-->| suspended |
+   .---------.                                .---------. '-----------'
+-->| created |------------------------------->| started |<--'
+   '---------'               .--------------. '---------'  .--------.
+      |    '---------------->| allocated    |   ^ ^ | '--->| FAILED |
+      |  .-----------------. | (single res) |---' | |      '--------'
       |  | offered         | '--------------'     | |   .-----------.
-      `->| (1 or more res) |----------------------' `-->| completed |
+      `->| (1 or more res) |----------------------' `-->| COMPLETED |
          '-----------------'                            '-----------'
 ```
 
 
-## Documentation
+## API
 
-See [doc/](doc/).
+```ruby
+list = Florist::Worklist.new(@unit.storage.db)
+# ...
+```
 
+### Florist::Worklist
+
+TODO
+
+### Florist::Task
+
+TODO
 
 ## LICENSE
 
