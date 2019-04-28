@@ -12,5 +12,6 @@ require 'florist/migrations'
 require 'florist/errors'
 require 'florist/taskers'
 require 'florist/models'
+require 'florist/controller'
 require 'florist/worklist'
 

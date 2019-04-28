@@ -7,6 +7,8 @@ class Florist::Worklist
   attr_reader :user, :domain
     # the user of the worklist and the domain at/in which it operates
 
+  attr_reader :controller
+
   # Florist::Worklist.new(db)
   # Florist::Worklist.new(flor_unit)
   # Florist::Worklist.new(db, flor_db: flor_db)
@@ -31,10 +33,10 @@ class Florist::Worklist
       get_unit_worklist_conf
          .merge!(Flor.to_string_keyed_hash(opts))
 
-    @controller = get_controller
-
     @user = opts[:user] || '(florist)'
     @domain = opts[:domain] || ''
+
+    @controller = get_controller
 
     @tasks = make_model_class(Florist::Task, :florist_tasks)
     @transitions = make_model_class(Florist::Transition, :florist_transitions)
@@ -130,24 +132,6 @@ class Florist::Worklist
           ctime: now,
           mtime: now)
     end
-  end
-end
-
-
-# Empty, permit all, implementation
-#
-class Florist::Controller
-
-  attr_reader :worklist
-
-  def initialize(worklist)
-
-    @worklist = worklist
-  end
-
-  def may?(right, domain)
-
-    true
   end
 end
 
