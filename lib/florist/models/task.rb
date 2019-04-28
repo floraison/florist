@@ -270,7 +270,7 @@ class Florist::Task < ::Florist::FloristModel
             name: name,
             state: state,
             description: nil,
-            user: opts[:user] || worklist.user,
+            user: opts[:user] || worklist.r_type_and_name,
             domain: opts[:domain] || lt.domain,
             content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
             ctime: now,
@@ -384,6 +384,8 @@ class Florist::Task < ::Florist::FloristModel
 
     as.collect { |a|
       case a
+      when :self
+        [ worklist.rtype, worklist.rname ]
       when Array, Integer, Symbol, Florist::Assignment
         a
       when Hash

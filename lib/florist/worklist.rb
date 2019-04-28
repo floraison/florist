@@ -4,8 +4,10 @@ class Florist::Worklist
   attr_reader :db    # the Sequel florist database
   attr_reader :unit  # the flor unit/scheduler
 
-  attr_reader :user, :domain
-    # the user of the worklist and the domain at/in which it operates
+  attr_reader :resource_type
+  attr_reader :resource_name
+
+  attr_reader :resource_domain
 
   attr_reader :controller
 
@@ -33,7 +35,9 @@ class Florist::Worklist
       get_unit_worklist_conf
          .merge!(Flor.to_string_keyed_hash(opts))
 
-    @user = opts[:user] || '(florist)'
+    @resource_type = opts[:resource_type] || opts[:rtype] || 'user'
+    @resource_name = opts[:resource_name] || opts[:rname] || '(florist)'
+
     @domain = opts[:domain] || ''
 
     @controller = get_controller
@@ -49,6 +53,10 @@ class Florist::Worklist
 
   attr_reader :tasks, :transitions, :assignments
 
+  alias rtype resource_type
+  alias rname resource_name
+  alias rdomain resource_domain
+
   def task_dataset; @db[:florist_tasks]; end
   def transition_dataset; @db[:florist_transitions]; end
   def transition_assignment_dataset; @db[:florist_transitions_assignments]; end
@@ -58,6 +66,9 @@ class Florist::Worklist
   alias transition_ds transition_dataset
   alias transition_assignment_ds transition_assignment_dataset
   alias assignment_ds assignment_dataset
+
+  def resource_type_and_name; "#{@resource_type}|#{@resource_name}"; end
+  alias r_type_and_name resource_type_and_name
 
   def list_tasks(domain=nil, opts={})
 

@@ -25,7 +25,9 @@ describe '::Florist' do
     Florist.delete_tables(storage_uri)
     Florist.migrate(storage_uri, table: :florist_schema_info)
 
-    @worklist = Florist::Worklist.new(@unit)
+    @worklist = Florist::Worklist.new(
+      @unit,
+      rtype: 'user', rname: 'waldo')
   end
 
   after :each do
@@ -319,6 +321,31 @@ describe '::Florist' do
               ).to eq(%w[])
 
             expect(@worklist.assignment_ds.count).to eq(2)
+          end
+        end
+
+        describe ':self' do
+
+          it 'assigns to self' do
+
+            t = @worklist.tasks.first
+            t.offer(:self, r: true)
+
+            expect(t.assignments.count).to eq(1)
+            expect(t.assignment.rtype).to eq('user')
+            expect(t.assignment.rname).to eq('waldo')
+          end
+
+          it 'reuses assignments to self' do
+
+            t = @worklist.tasks.first
+            sid1 = t.offer(:self, r: true)
+            sid2 = t.allocate('user', 'alice', r: true)
+            sid3 = t.offer(:self, r: true)
+
+            expect(t.assignments.count).to eq(1)
+            expect(t.all_assignments.count).to eq(2)
+            expect(t.assignment.transition_ids).to eq([ sid1, sid3 ])
           end
         end
       end
