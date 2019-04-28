@@ -36,14 +36,13 @@ class Florist::Worklist
     @user = opts[:user] || '(florist)'
     @domain = opts[:domain] || ''
 
-    @tasks =
-      make_model_class(Florist::Task, :florist_tasks)
-    @transitions =
-      make_model_class(Florist::Transition, :florist_transitions)
-    @assignments =
-      make_model_class(Florist::Assignment, :florist_assignments)
-        #
-        # TODO factor in @domain
+    @tasks = make_model_class(Florist::Task, :florist_tasks)
+    @transitions = make_model_class(Florist::Transition, :florist_transitions)
+    @assignments = make_model_class(Florist::Assignment, :florist_assignments)
+
+    @tasks = @tasks
+      .where(Sequel.like(:domain, @domain.split('.').join('.') + '.%')) \
+        unless @domain.empty?
   end
 
   attr_reader :tasks, :transitions, :assignments
