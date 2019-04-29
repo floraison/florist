@@ -16,6 +16,9 @@ class Florist::Worklist
 
   attr_reader :tasks, :transitions, :assignments
 
+  alias rtype resource_type
+  alias rname resource_name
+
   # Florist::Worklist.new(flor_unit/*, opts*/)
   # Florist::Worklist.new(flor_unit, florist_db/*, opts*/)
   # Florist::Worklist.new(flor_unit, florist_db_uri/*, opts*/)
@@ -27,17 +30,17 @@ class Florist::Worklist
   def initialize(*args)
 
     @unit, @flor_db, @florist_db, opts = sort_arguments(args)
+    @opts = get_unit_worklist_conf.merge!(opts)
+
+    fail ArgumentError.new("missing a florist database") \
+      unless @florist_db
 
     class << @florist_db; attr_accessor :flor_worklist; end
     @florist_db.flor_worklist = self
 
-    @opts =
-      get_unit_worklist_conf
-         .merge!(Flor.to_string_keyed_hash(opts))
-
-    @resource_type = opts[:resource_type] || opts[:rtype] || 'user'
-    @resource_name = opts[:resource_name] || opts[:rname] || '(florist)'
-    @resource_domain = opts[:resource_domain] || opts[:rdomain] || '(florist)'
+    @resource_type = opts['resource_type'] || opts['rtype'] || 'user'
+    @resource_name = opts['resource_name'] || opts['rname'] || '(florist)'
+    @resource_domain = opts['resource_domain'] || opts['rdomain'] || ''
 
     @controller = get_controller
 
@@ -115,8 +118,8 @@ class Florist::Worklist
 
     [ unit,
       flor_db,
-      florist_db || flor_db || unit.storage.db,
-      opts ]
+      florist_db || flor_db || (unit && unit.storage.db),
+      Flor.to_string_keyed_hash(opts) ]
   end
 
   def make_model_class(parent_class, table_name)
@@ -125,7 +128,7 @@ class Florist::Worklist
 
     Class.new(parent_class) do
       self.worklist = wl
-      self.dataset = wl.db[table_name]
+      self.dataset = wl.florist_db[table_name]
     end
   end
 

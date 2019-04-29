@@ -95,6 +95,18 @@ describe '::Florist' do
         end
       end
 
+      describe '(no_florist_db)' do
+
+        it 'fails' do
+
+          expect {
+            Florist::Worklist.new()
+          }.to raise_error(
+            ArgumentError, "missing a florist database"
+          )
+        end
+      end
+
 #      describe 'domain: "org.acme"' do
 #
 #        it 'instantiates a worklist limited to "org.acme.%"' do
