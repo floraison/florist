@@ -89,6 +89,30 @@ class Florist::Worklist
 #    @controller.filter(opts)
 #  end
 
+  def return(msg)
+
+    if unit
+
+      unit.return(msg)
+
+    elsif flor_db
+
+      flor_db[:flor_messages]
+        .insert(
+          domain: domain,
+          exid: exid,
+          point: 'return',
+          content: Flor.to_blob(msg),
+          status: 'created',
+          ctime: now,
+          mtime: now)
+
+    else
+
+      nil
+    end
+  end
+
   protected
 
   def sort_arguments(args)
@@ -153,38 +177,6 @@ class Florist::Worklist
       else
         Florist::Controller.new(self)
       end
-  end
-
-  def queue_message(msg)
-
-    # TODO case where florist db != flor db
-
-    now = Flor.tstamp
-
-    db.transaction do
-      #
-      # the florist db operations involve 3 florist tables
-      # while the flor db operation involves 1
-      # use the florist db transaction
-
-      # TODO archive florist rows?
-
-      sq = db[:florist_transitions].where(task_id: id)
-
-      tc = db[:florist_tasks].where(id: id).delete
-      ac = db[:florist_assignments].where(transition_id: sq.select(:id)).delete
-      sc = sq.delete
-
-      flor_db[:flor_messages]
-        .insert(
-          domain: domain,
-          exid: exid,
-          point: 'return',
-          content: Flor.to_blob(msg),
-          status: 'created',
-          ctime: now,
-          mtime: now)
-    end
   end
 end
 

@@ -551,11 +551,29 @@ describe '::Florist' do
       end
 
       describe '#transition_to_failed / #fail' do
-        it 'marks the task as failed and replies to the execution'
+
+        it 'marks the task as failed and replies to the execution' do
+
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob', r: true)
+          t.fail(r: true)
+          #t.fail(payload: { nada: 'surf' }, r: true)
+
+          m = @unit.wait(t.exid, 'failed')
+
+          expect(m['point']).to eq('failed')
+          expect(m['exid']).to eq(t.exid)
+
+          expect(@worklist.tasks[t.id]).to eq(nil)
+        end
+
         context 'reply: false' do
+
           it 'marks the task as failed but does not reply'
         end
       end
+
       describe '#transition_to_completed / #complete' do
         it 'marks the task as completed and replies to the execution'
         context 'reply: false' do

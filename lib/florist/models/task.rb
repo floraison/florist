@@ -32,6 +32,11 @@ class Florist::Task < ::Florist::FloristModel
     @executions[exid: exid]
   end
 
+  def message
+
+    data['message']
+  end
+
   def payload
 
     @flor_model_cache_payload ||=
@@ -57,14 +62,14 @@ class Florist::Task < ::Florist::FloristModel
         .where(id: id, mtime: mtime)
         .update(mtime: now)
           #
-      fail Florist::ConflictError, 'task outdated, update failed' \
+      raise Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
 
       n = db[:florist_transitions]
         .where(id: s.id, mtime: s.mtime)
         .update(content: Flor.to_blob(c), mtime: now)
           #
-      fail Florist::ConflictError, 'task transitions outdated, update failed' \
+      raise Florist::ConflictError, 'task transitions outdated, update failed' \
         if n != 1
     end
 
@@ -144,10 +149,31 @@ class Florist::Task < ::Florist::FloristModel
     transition_and_or_assign('suspended', *as)
   end
 
+  def transition_to_failed(*as)
+
+    # TODO mark as failed
+    # TODO mark as archived
+
+    m = message
+    m['payload'] = payload
+    m['point'] = 'failed'
+
+    transition_and_or_assign('failed', *as) do
+
+      if worklist
+        worklist.return(m)
+        remove
+      else
+        set_status('failed')
+      end
+    end
+  end
+
   alias offer transition_to_offered
   alias allocate transition_to_allocated
   alias start transition_to_started
   alias suspend transition_to_suspended
+  alias fail transition_to_failed
 
   alias pause transition_to_suspended
 
@@ -193,9 +219,20 @@ class Florist::Task < ::Florist::FloristModel
 
   protected
 
+  def remove
+
+    db[:florist_tasks].where(id: id).delete
+
+    w = { task_id: id }
+
+    [ :florist_transitions, :florist_transitions_assignments,
+      :florist_assignments ]
+        .each { |t| db[t].where(w).delete }
+  end
+
   def guard(v, s)
 
-    fail Florist::ConflictError.new(
+    raise Florist::ConflictError.new(
       "cannot #{v} task #{id} " +
       "because it is currently #{state.inspect}, not #{s.inspect}"
     ) if state != s
@@ -229,7 +266,7 @@ class Florist::Task < ::Florist::FloristModel
     latest_transition_content('payload')
   end
 
-  def transition_and_or_assign(state, *as)
+  def transition_and_or_assign(state, *as, &block)
 
     opts = is_opts_hash?(as.last) ? as.pop : {}
 
@@ -259,7 +296,7 @@ class Florist::Task < ::Florist::FloristModel
         .where(id: id, mtime: mtime)
         .update(mtime: now)
           #
-      fail Florist::ConflictError, 'task outdated, update failed' \
+      raise Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
 
       if lt.state != state || (opts[:force] || opts[:override])
@@ -286,15 +323,17 @@ class Florist::Task < ::Florist::FloristModel
           .where(id: sid, mtime: lt.mtime)
           .update(cols)
             #
-        fail Florist::ConflictError, 'task transition outdated, update failed' \
-          if n != 1
+        raise Florist::ConflictError.new(
+          'task transition outdated, update failed') if n != 1
       end
 
       update_assignments(now, sid, assignments) \
         if assignments.any?
+
+      block.call if block
     end
 
-    refresh if opts[:refresh] || opts[:r]
+    begin; refresh; rescue; nil; end if opts[:refresh] || opts[:r]
 
     sid
   end
@@ -327,11 +366,11 @@ class Florist::Task < ::Florist::FloristModel
           aa = ah[a]
           o << aa if aa
         when Florist::Assignment
-          fail ArgumentError, "assignment #{a.id} not linked to task #{id}" \
+          raise ArgumentError, "assignment #{a.id} not linked to task #{id}" \
             unless ah[a.id]
           o << a
         when Symbol
-          fail ArgumentError, "not an (pseudo-)assignment #{a.inspect}"
+          raise ArgumentError, "not an (pseudo-)assignment #{a.inspect}"
         #else
           # no new/old assignment id
         end
@@ -343,7 +382,7 @@ class Florist::Task < ::Florist::FloristModel
         .where { Sequel.|(*old_as.map { |a| { id: a.id, mtime: a.mtime } }) }
         .update(mtime: now)
           #
-      fail Florist::ConflictError, 'task outdated, transition update failed' \
+      raise Florist::ConflictError, 'task outdated, transition update failed' \
         if n != old_as.size
     end
 
@@ -392,25 +431,18 @@ class Florist::Task < ::Florist::FloristModel
         h = Flor.to_string_keyed_hash(a)
         t = h['resource_type'] || h['rtype'] || 'user'
         n = h['resource_name'] || h['rname']
-        fail ArgumentError.new("no resource_name in #{h.inspect}") unless n
+        raise ArgumentError.new("no resource_name in #{h.inspect}") unless n
         [ t, n ]
       else
-        fail ArgumentError.new("not an assignment #{a.inspect}")
+        raise ArgumentError.new("not an assignment #{a.inspect}")
       end }
   end
 
   def determine_tname(state)
 
-    case state
-    when 'created' then 'create'
-    when 'offered' then 'offer'
-    when 'allocated' then 'allocate'
-    when 'started' then 'start'
-    when 'suspended' then 'suspend'
-    when 'failed' then 'fail'
-    when 'completed' then 'complete'
-    else "to-#{state}"
-    end
+    return 'allocate' if state == 'allocated'
+    return state[0..-3] if state[-2..-1] == 'ed'
+    "to-#{state}"
   end
 end
 
