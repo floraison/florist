@@ -162,25 +162,6 @@ class Florist::Task < ::Florist::FloristModel
     transition_and_or_assign('started', *as)
   end
 
-#  def return(opts={})
-#
-#    m = Flor.dup(message)
-#    m['point'] = 'return'
-#    m['payload'] = Flor.to_string_keyed_hash(payload)
-#
-#    queue_message(m)
-#  end
-#  alias reply return
-#
-#  def return_error(err, opts={})
-#
-#    m = Flor.to_error_message(message, err)
-#    #m['payload'] = payload
-#
-#    queue_message(m)
-#  end
-#  alias reply_with_error return_error
-
   def to_h
 
     h = super
