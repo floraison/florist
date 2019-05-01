@@ -314,19 +314,19 @@ describe '::Florist' do
             ).to eq('text' => 'lore ipsum', 'ret' => 'send message')
         end
 
-        it 'returns the latest payload' do
-
-          t = @worklist.tasks.first
-
-          c = t.push_payload(:kilroy => 'was there')
-
-          expect(c.size).to eq(1)
-          expect(c.first.keys).to eq(%w[ tstamp payload ])
-
-          t = @worklist.tasks.first
-
-          expect(t.payload).to eq({ 'kilroy' => 'was there' })
-        end
+#        it 'returns the latest payload' do
+#
+#          t = @worklist.tasks.first
+#
+#          c = t.push_payload(:kilroy => 'was there')
+#
+#          expect(c.size).to eq(1)
+#          expect(c.first.keys).to eq(%w[ tstamp payload ])
+#
+#          t = @worklist.tasks.first
+#
+#          expect(t.payload).to eq({ 'kilroy' => 'was there' })
+#        end
       end
 
       describe '#tname' do

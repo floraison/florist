@@ -48,33 +48,33 @@ class Florist::Task < ::Florist::FloristModel
   #
   # 'update' methods
 
-  def push_payload(h)
-
-    c = nil
-
-    db.transaction do
-
-      s = transition
-      now = Flor.tstamp
-      c = (s._data || []) << { 'tstamp' => now, 'payload' => h }
-
-      n = db[:florist_tasks]
-        .where(id: id, mtime: mtime)
-        .update(mtime: now)
-          #
-      raise Florist::ConflictError, 'task outdated, update failed' \
-        if n != 1
-
-      n = db[:florist_transitions]
-        .where(id: s.id, mtime: s.mtime)
-        .update(content: Flor.to_blob(c), mtime: now)
-          #
-      raise Florist::ConflictError, 'task transitions outdated, update failed' \
-        if n != 1
-    end
-
-    c
-  end
+#  def push_payload(h)
+#
+#    c = nil
+#
+#    db.transaction do
+#
+#      s = transition
+#      now = Flor.tstamp
+#      c = (s._data || []) << { 'tstamp' => now, 'payload' => h }
+#
+#      n = db[:florist_tasks]
+#        .where(id: id, mtime: mtime)
+#        .update(mtime: now)
+#          #
+#      raise Florist::ConflictError, 'task outdated, update failed' \
+#        if n != 1
+#
+#      n = db[:florist_transitions]
+#        .where(id: s.id, mtime: s.mtime)
+#        .update(content: Flor.to_blob(c), mtime: now)
+#          #
+#      raise Florist::ConflictError, 'task transitions outdated, update failed' \
+#        if n != 1
+#    end
+#
+#    c
+#  end
 
   #
   # 'graph' methods
