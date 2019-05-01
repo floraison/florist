@@ -276,16 +276,8 @@ class Florist::Task < ::Florist::FloristModel
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
 
     sid = nil
-
     now = Flor.tstamp
-
-    meta = { tstamp: now }
-      #
-    pl = opts[:payload] || opts[:fields]
-    meta[:payload] = pl if pl
-      #
-    met = opts[:meta]
-    meta.merge!(met) if met  # TODO spec me
+    meta = determine_meta(now, opts)
 
     db.transaction do
 
@@ -336,6 +328,20 @@ class Florist::Task < ::Florist::FloristModel
     begin; refresh; rescue; nil; end if opts[:refresh] || opts[:r]
 
     sid
+  end
+
+  def determine_meta(now, opts)
+
+    pl = opts[:payload] || opts[:fields]
+    mt = opts[:meta]
+
+    return {} unless pl || mt
+
+    meta = { tstamp: now }
+    meta[:payload] = pl if pl
+    meta.merge!(mt) if mt  # TODO spec me
+
+    meta
   end
 
   def update_assignments(now, transition_id, assignments)
