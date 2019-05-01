@@ -314,6 +314,14 @@ describe '::Florist' do
             ).to eq('text' => 'lore ipsum', 'ret' => 'send message')
         end
 
+        it 'returns the latest payload' do
+
+          t = @worklist.tasks.first
+          t.offer('user', 'bob', payload: { colour: 'blue' }, r:true)
+
+          expect(t.fields).to eq('colour' => 'blue')
+        end
+
 #        it 'returns the latest payload' do
 #
 #          t = @worklist.tasks.first
