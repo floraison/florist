@@ -49,32 +49,8 @@ class Florist::Task < ::Florist::FloristModel
   # 'update' methods
 
 #  def push_payload(h)
-#
-#    c = nil
-#
-#    db.transaction do
-#
-#      s = transition
-#      now = Flor.tstamp
-#      c = (s._data || []) << { 'tstamp' => now, 'payload' => h }
-#
-#      n = db[:florist_tasks]
-#        .where(id: id, mtime: mtime)
-#        .update(mtime: now)
-#          #
-#      raise Florist::ConflictError, 'task outdated, update failed' \
-#        if n != 1
-#
-#      n = db[:florist_transitions]
-#        .where(id: s.id, mtime: s.mtime)
-#        .update(content: Flor.to_blob(c), mtime: now)
-#          #
-#      raise Florist::ConflictError, 'task transitions outdated, update failed' \
-#        if n != 1
-#    end
-#
-#    c
-#  end
+#  def push_content(h)
+#  ...
 
   #
   # 'graph' methods
@@ -276,13 +252,13 @@ class Florist::Task < ::Florist::FloristModel
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
 
     sid = nil
-    now = Flor.tstamp
-    meta = determine_meta(now, opts)
 
     db.transaction do
 
-      lt = last_transition
-      sid = lt.id
+      ls = last_transition
+      sid = ls.id
+
+      now = Flor.tstamp
 
       n = db[:florist_tasks]
         .where(id: id, mtime: mtime)
@@ -291,7 +267,9 @@ class Florist::Task < ::Florist::FloristModel
       raise Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
 
-      if lt.state != state || (opts[:force] || opts[:override])
+      if ls.state != state || (opts[:force] || opts[:override])
+
+        scon = determine_transition_content(opts, nil, now)
 
         sid = db[:florist_transitions]
           .insert(
@@ -300,19 +278,19 @@ class Florist::Task < ::Florist::FloristModel
             state: state,
             description: nil,
             user: opts[:user] || worklist.r_type_and_name,
-            domain: opts[:domain] || lt.domain,
-            content: meta.size > 1 ? Flor.to_blob([ meta ]) : nil,
+            domain: opts[:domain] || ls.domain,
+            content: Flor.to_blob(scon),
             ctime: now,
             mtime: now,
             status: 'active')
 
       else
 
-        cols = { mtime: now }
-        cols[:content] = Flor.to_blob((lt._data || []) << meta) if meta.size > 1
+        scon = determine_transition_content(opts, ls, now)
+        cols = { mtime: now, content: Flor.to_blob(scon) }
 
         n = db[:florist_transitions]
-          .where(id: sid, mtime: lt.mtime)
+          .where(id: sid, mtime: ls.mtime)
           .update(cols)
             #
         raise Florist::ConflictError.new(
@@ -325,23 +303,17 @@ class Florist::Task < ::Florist::FloristModel
       block.call if block
     end
 
-    begin; refresh; rescue; nil; end if opts[:refresh] || opts[:r]
+    (refresh rescue nil) if opts[:refresh] || opts[:r]
 
     sid
   end
 
-  def determine_meta(now, opts)
+  def determine_transition_content(opts, ls, now)
 
-    pl = opts[:payload] || opts[:fields]
-    mt = opts[:meta]
-
-    return {} unless pl || mt
-
-    meta = { tstamp: now }
-    meta[:payload] = pl if pl
-    meta.merge!(mt) if mt  # TODO spec me
-
-    meta
+    (ls ? ls.data : []) << opts
+      .inject({ tstamp: now }) { |r, (k, v)|
+        r[k] = v if [ :payload, :set, :unset ].include?(k)
+        r }
   end
 
   def update_assignments(now, transition_id, assignments)
@@ -363,8 +335,8 @@ class Florist::Task < ::Florist::FloristModel
         when :all
           o.concat(aas)
         when :current
-          lti = last_transition.id
-          o.concat(aas.select { |a| a.transition_ids.include?(lti) })
+          lsi = last_transition.id
+          o.concat(aas.select { |a| a.transition_ids.include?(lsi) })
         when :first, :last
           aa = aas.send(a)
           o << aa if aa

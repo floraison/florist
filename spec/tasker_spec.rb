@@ -105,7 +105,7 @@ describe '::Florist' do
       expect(t[:status]).to eq('active')
 
       expect(s[:task_id]).to eq(t[:id])
-      expect(s[:content]).to eq(nil)
+      expect(s[:content]).not_to eq(nil)
       expect(s[:state]).to eq('allocated')
       expect(s[:ctime]).to eq(t[:ctime])
       expect(s[:mtime]).to eq(t[:ctime])

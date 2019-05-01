@@ -62,7 +62,8 @@ module Florist
       rna = rty ? opt_or_conf(:resource_name, :rname, message['tasker']) : nil
       sta = opt_or_conf(:state, rty ? 'offered' : 'created')
       nam = opt_or_conf(:transition_name, :tname, rty ? 'offer' : 'create')
-      con = { message: message }
+      tcon = { message: message }
+      scon = [ { tstamp: now } ]
 
       ti = nil
 
@@ -78,7 +79,7 @@ module Florist
             tasker: message['tasker'],
             taskname: message['taskname'],
             attls1: (message['attl'] || []).select { |e| e.is_a?(String) }[1],
-            content: Flor.to_blob(con),
+            content: Flor.to_blob(tcon),
             ctime: now,
             mtime: now,
             status: 'active')
@@ -91,7 +92,7 @@ module Florist
             description: nil,
             user: '(flor)',
             domain: dom,
-            content: nil,
+            content: Flor.to_blob(scon),
             ctime: now,
             mtime: now,
             status: 'active')
