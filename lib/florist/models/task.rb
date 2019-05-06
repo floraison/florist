@@ -377,14 +377,18 @@ class Florist::Task < ::Florist::FloristModel
 
   def extract_assignments(as)
 
-    return [ as ] \
-      if as.collect(&:class) == [ String, String ]
+    cs = as.collect(&:class)
+
+    return [ as ] if cs == [ String, String ]
+    return [ as.collect(&:to_s) ] if cs == [ Symbol, Symbol ]
 
     as.collect { |a|
       case a
       when :self
         [ worklist.rtype, worklist.rname ]
-      when Array, Integer, Symbol, Florist::Assignment
+      when Array
+        a.collect(&:to_s)
+      when Integer, Symbol, Florist::Assignment
         a
       when Hash
         h = Flor.to_string_keyed_hash(a)

@@ -364,6 +364,30 @@ describe '::Florist' do
           expect(s1.assignments.collect(&:rname)).to eq(%w[ alice ])
           expect(s2.assignments.collect(&:rname)).to eq(%w[ alice ])
         end
+
+        it 'accepts (:rtype, :rname)' do
+
+          t = @worklist.tasks.first
+
+          i = t.offer(:user, :alice, r: true)
+
+          a = t.assignment
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('alice')
+        end
+
+        it 'accepts ([ :rt0, :rn0 ], [ :rt1, :rn1 ])' do
+
+          t = @worklist.tasks.first
+
+          i = t.offer([ :user, :alice ], [ :group, :glup ], r: true)
+
+          as = t.assignments
+
+          expect(as.collect(&:rtype)).to eq(%w[ user group ])
+          expect(as.collect(&:rname)).to eq(%w[ alice glup ])
+        end
       end
 
       describe '#transition_to_allocated / #allocate' do
