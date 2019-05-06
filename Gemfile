@@ -3,7 +3,7 @@ source 'https://rubygems.org'
 
 #gem 'flor', '0.16.1'
 #gem 'flor', path: '../flor/' # temporarily
-gem 'flor', git: 'https://github.com/floraison/flor' # temporarily
+#gem 'flor', git: 'https://github.com/floraison/flor' # temporarily
 
 #group :development, :test do
 #  gem 'thin'
