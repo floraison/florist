@@ -18,6 +18,7 @@
 
 tmp/*.db
 tmp/*.log
+tmp/*.json
 .tmp.*
 
 .notes.md

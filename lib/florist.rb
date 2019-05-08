@@ -14,4 +14,5 @@ require 'florist/taskers'
 require 'florist/models'
 require 'florist/controller'
 require 'florist/worklist'
+require 'florist/dump'
 

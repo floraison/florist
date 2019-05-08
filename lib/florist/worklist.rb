@@ -48,6 +48,11 @@ class Florist::Worklist
     @transitions = make_model_class(Florist::Transition, :florist_transitions)
     @assignments = make_model_class(Florist::Assignment, :florist_assignments)
 
+    @transitions_assignments =
+      make_model_class(
+        Florist::TransitionAssignment,
+        :florist_transitions_assignments)
+
 #    @tasks = @tasks
 #      .where(Sequel.like(:domain, @domain.split('.').join('.') + '.%')) \
 #        unless @domain.empty?
@@ -113,7 +118,70 @@ class Florist::Worklist
     end
   end
 
+  def dump(io=nil, opts=nil, &block)
+
+    io, opts = nil, io if io.is_a?(Hash)
+    opts ||= {}
+
+    d =
+      lambda do |h|
+
+        exis, doms, sdms =
+          extract_dump_and_load_filters(opts)
+
+        tids = florist_db[:florist_tasks].select(:id)
+
+        tids = tids.where(
+          exid: exis) if exis
+        tids = tids.where {
+          Sequel.|(*doms
+            .inject([]) { |a, d|
+              a.concat([
+                { domain: d },
+                Sequel.like(:domain, d + '.%') ]) }) } if doms
+        tids = tids.where(
+          domain: sdms) if sdms
+
+        h[:tasks] =
+            tasks.where(id: tids).collect(&:to_h)
+        h[:transitions] =
+            transitions.where(task_id: tids).collect(&:to_h)
+        h[:transitions_assignments] =
+            @transitions_assignments.where(task_id: tids).collect(&:to_h)
+        h[:assignments] =
+            assignments.where(task_id: tids).collect(&:to_h)
+
+        h[:timestamp] ||= Flor.tstamp
+
+        h
+      end
+
+    return Flor.dump(flor_db, io, opts, &d) if opts[:flor]
+
+    hash = florist_db.transaction { d.call }
+
+    return hash if opts[:hash] || opts[:h]
+
+    o = io ? io : StringIO.new
+
+    JSON.dump(hash, o)
+
+    io ? io : o.string
+  end
+
+  def load(string_or_io, opts={}, &block)
+
+# TODO
+  end
+
   protected
+
+  def extract_dump_and_load_filters(opts)
+
+    o = lambda { |k| v = opts[k] || opts["#{k}s".to_sym]; v ? Array(v) : nil }
+
+    [ o[:exid], o[:domain], o[:strict_domain] || o[:sdomain] ]
+  end
 
   def sort_arguments(args)
 

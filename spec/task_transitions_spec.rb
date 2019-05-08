@@ -45,14 +45,26 @@ describe '::Florist' do
           'bob',
           Florist::WorklistTasker)
 
-        @r = @unit.launch(
-          %q{
-            bob 'send message'
-          },
-          domain: 'org.acme',
-          wait: 'task')
+        if @dump
 
-        wait_until { @worklist.task_ds.count == 1 }
+          Florist.load(storage_uri, File.read(@dump), flor: true)
+
+        else
+
+          @r = @unit.launch(
+            %q{
+              bob 'send message'
+            },
+            domain: 'org.acme',
+            wait: 'task')
+
+          wait_until { @worklist.task_ds.count == 1 }
+
+          @dump = 'tmp/stts.json'
+
+          File.open(@dump, 'wb') { |f|
+            Florist.dump(storage_uri, f, flor: true) }
+        end
       end
 
       it 'fails if the task changed meanwhile' do
