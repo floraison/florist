@@ -8,7 +8,23 @@
 require 'spec_helper'
 
 
+#module Sequel
+#  class << self
+#  alias original_connect connect
+#  def connect(uri)
+#puts caller.take_while { |l| ! l.match(/rspec/) }
+#    original_connect(uri)
+#.tap { |x| p x.object_id }
+#  end
+#  end
+#end
 describe '::Florist' do
+
+  before :all do
+
+    delete_databases
+    delete_dumps
+  end
 
   before :each do
 
@@ -20,10 +36,14 @@ describe '::Florist' do
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
     @unit.storage.migrate
-    @unit.start
 
-    Florist.delete_tables(storage_uri)
-    Florist.migrate(storage_uri, table: :florist_schema_info)
+    Florist.delete_tables(@unit.storage.db)
+    Florist.migrate(@unit.storage.db, table: :florist_schema_info)
+
+    Florist.load(@unit.storage.db, File.read(dump_path), flor: true) \
+      if has_dump?
+
+    @unit.start
 
     @worklist = Florist::Worklist.new(
       @unit,
@@ -45,11 +65,7 @@ describe '::Florist' do
           'bob',
           Florist::WorklistTasker)
 
-        if @dump
-
-          Florist.load(storage_uri, File.read(@dump), flor: true)
-
-        else
+        unless has_dump?
 
           @r = @unit.launch(
             %q{
@@ -60,10 +76,8 @@ describe '::Florist' do
 
           wait_until { @worklist.task_ds.count == 1 }
 
-          @dump = 'tmp/stts.json'
-
-          File.open(@dump, 'wb') { |f|
-            Florist.dump(storage_uri, f, flor: true) }
+          File.open(dump_path, 'wb') { |f|
+            Florist.dump(@unit.storage.db, f, flor: true) }
         end
       end
 
@@ -625,10 +639,16 @@ describe '::Florist' do
         @unit.add_tasker(
           'bob', Florist::WorklistTasker)
 
-        @r = @unit.launch(
-          %q{ bob 'send message' }, domain: 'org.acme', wait: 'task')
+        unless has_dump?
 
-        wait_until { @worklist.task_ds.count == 1 }
+          @r = @unit.launch(
+            %q{ bob 'send message' }, domain: 'org.acme', wait: 'task')
+
+          wait_until { @worklist.task_ds.count == 1 }
+
+          File.open(dump_path, 'wb') { |f|
+            Florist.dump(@unit.storage.db, f, flor: true) }
+        end
       end
 
       describe '#resume' do

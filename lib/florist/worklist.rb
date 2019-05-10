@@ -119,6 +119,7 @@ class Florist::Worklist
   end
 
   def dump(io=nil, opts=nil, &block)
+# FIXME what if florist_db != flor_db, transactions?
 
     io, opts = nil, io if io.is_a?(Hash)
     opts ||= {}
@@ -126,39 +127,42 @@ class Florist::Worklist
     d =
       lambda do |h|
 
-        exis, doms, sdms =
-          extract_dump_and_load_filters(opts)
+        florist_db.transaction do
 
-        tids = florist_db[:florist_tasks].select(:id)
+          exis, doms, sdms =
+            extract_dump_and_load_filters(opts)
 
-        tids = tids.where(
-          exid: exis) if exis
-        tids = tids.where {
-          Sequel.|(*doms
-            .inject([]) { |a, d|
-              a.concat([
-                { domain: d },
-                Sequel.like(:domain, d + '.%') ]) }) } if doms
-        tids = tids.where(
-          domain: sdms) if sdms
+          tids = florist_db[:florist_tasks].select(:id)
 
-        h[:tasks] =
-            tasks.where(id: tids).collect(&:to_h)
-        h[:transitions] =
-            transitions.where(task_id: tids).collect(&:to_h)
-        h[:transitions_assignments] =
-            @transitions_assignments.where(task_id: tids).collect(&:to_h)
-        h[:assignments] =
-            assignments.where(task_id: tids).collect(&:to_h)
+          tids = tids.where(
+            exid: exis) if exis
+          tids = tids.where {
+            Sequel.|(*doms
+              .inject([]) { |a, d|
+                a.concat([
+                  { domain: d },
+                  Sequel.like(:domain, d + '.%') ]) }) } if doms
+          tids = tids.where(
+            domain: sdms) if sdms
 
-        h[:timestamp] ||= Flor.tstamp
+          h[:tasks] =
+              tasks.where(id: tids).collect(&:to_h)
+          h[:transitions] =
+              transitions.where(task_id: tids).collect(&:to_h)
+          h[:transitions_assignments] =
+              @transitions_assignments.where(task_id: tids).collect(&:to_h)
+          h[:assignments] =
+              assignments.where(task_id: tids).collect(&:to_h)
+
+          h[:timestamp] ||= Flor.tstamp
+        end
 
         h
       end
 
     return Flor.dump(flor_db, io, opts, &d) if opts[:flor]
 
-    hash = florist_db.transaction { d.call }
+    hash = d.call
 
     return hash if opts[:hash] || opts[:h]
 
@@ -170,8 +174,49 @@ class Florist::Worklist
   end
 
   def load(string_or_io, opts={}, &block)
+# FIXME what if florist_db != flor_db, transactions?
 
-# TODO
+    d =
+      lambda do |h, counts|
+
+        florist_db.transaction do
+
+          task_id_map = {}
+          transition_id_map = {}
+          assignment_id_map = {}
+
+          h['tasks'].each do |t|
+            task_id_map[t['id']] = tasks.insert_from_h(t)
+          end
+          h['transitions'].each do |s|
+            s['task_id'] = task_id_map[s['task_id']]
+            transition_id_map[s['id']] = transitions.insert_from_h(s)
+          end
+          h['assignments'].each do |a|
+            a['task_id'] = task_id_map[a['task_id']]
+            transition_id_map[a['id']] = assignments.insert_from_h(a)
+          end
+          h['transitions_assignments'].each do |sa|
+            sa['task_id'] = task_id_map[sa['task_id']]
+            sa['transition_id'] = transition_id_map[sa['transition_id']]
+            sa['assignment_id'] = assignment_id_map[sa['assignment_id']]
+            transitions_assignments.insert_from_h(sa)
+          end
+        end
+
+        counts[:tasks] = h['tasks'].size
+        counts[:transitions] = h['transitions'].size
+        counts[:transitions_assignments] = h['transitions_assignments'].size
+        counts[:assignments] = h['assignments'].size
+
+        counts
+      end
+
+    if opts[:flor]
+      Flor.load(flor_db, string_or_io, opts, &d)
+    else
+      d.call({}, {})
+    end
   end
 
   protected

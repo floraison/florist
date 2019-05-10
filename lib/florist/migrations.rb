@@ -16,9 +16,11 @@ module Florist
 
       db = connect(db_or_db_uri, opts)
 
+      rex = /\Aflorist_/
+      rex = /\Aflor(ist)?_/ if opts[:flor]
+
       db.tables.each { |t|
-        db[t].delete \
-          if t.to_s.match(/^florist_/) && db[t].columns.size > 2 }
+        db[t].delete if rex.match(t.to_s) && db[t].columns.size > 2 }
 
       db.disconnect if db_or_db_uri.is_a?(String)
 

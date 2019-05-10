@@ -82,6 +82,28 @@ module Helpers
       "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/florist_test.db"
     end
   end
+
+  def delete_databases
+
+    FileUtils.rm_f('tmp/*.db')
+  end
+
+  def delete_dumps
+
+    Dir['tmp/*_dump.json'].each { |pa| FileUtils.rm_f(pa) }
+  end
+
+  def has_dump?
+
+    File.exist?(dump_path)
+  end
+
+  def dump_path
+
+    'tmp/' +
+    File.basename(caller.find { |l| l.match(/_spec\.rb:/) }).split('.rb')[0] +
+    '_dump.json'
+  end
 end
 
 RSpec.configure do |c|
