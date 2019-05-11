@@ -28,9 +28,11 @@ describe '::Florist' do
 
   before :each do
 
+    @storage_uri = generate_storage_uri
+
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
-      sto_uri: storage_uri,
+      sto_uri: @storage_uri,
       sto_migration_table: :flor_schema_info)
     @unit.conf['unit'] = 'tskspec'
     #@unit.hook('journal', Flor::Journal)

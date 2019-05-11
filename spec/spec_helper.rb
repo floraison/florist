@@ -83,9 +83,16 @@ module Helpers
     end
   end
 
+  def generate_storage_uri
+
+    name = File.basename(inspect.match(/\(([^)]+)\)/)[1]).sub('.rb:', '_')
+
+    "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/#{name}.db"
+  end
+
   def delete_databases
 
-    FileUtils.rm_f('tmp/*.db')
+    Dir['tmp/*.db'].each { |pa| FileUtils.rm_f(pa) }
   end
 
   def delete_dumps
