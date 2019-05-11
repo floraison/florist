@@ -8,44 +8,22 @@
 require 'spec_helper'
 
 
-#module Sequel
-#  class << self
-#  alias original_connect connect
-#  def connect(uri)
-#puts caller.take_while { |l| ! l.match(/rspec/) }
-#    original_connect(uri)
-#.tap { |x| p x.object_id }
-#  end
-#  end
-#end
 describe '::Florist' do
-
-  before :all do
-
-    delete_databases
-    delete_dumps
-  end
 
   before :each do
 
-    @storage_uri = generate_storage_uri
-
     @unit = Flor::Unit.new(
       loader: Flor::HashLoader,
-      sto_uri: @storage_uri,
+      sto_uri: storage_uri,
       sto_migration_table: :flor_schema_info)
     @unit.conf['unit'] = 'tskspec'
     #@unit.hook('journal', Flor::Journal)
     @unit.storage.delete_tables
     @unit.storage.migrate
-
-    Florist.delete_tables(@unit.storage.db)
-    Florist.migrate(@unit.storage.db, table: :florist_schema_info)
-
-    Florist.load(@unit.storage.db, File.read(dump_path), flor: true) \
-      if has_dump?
-
     @unit.start
+
+    Florist.delete_tables(storage_uri)
+    Florist.migrate(storage_uri, table: :florist_schema_info)
 
     @worklist = Florist::Worklist.new(
       @unit,
@@ -67,20 +45,14 @@ describe '::Florist' do
           'bob',
           Florist::WorklistTasker)
 
-        unless has_dump?
+        @r = @unit.launch(
+          %q{
+            bob 'send message'
+          },
+          domain: 'org.acme',
+          wait: 'task')
 
-          @r = @unit.launch(
-            %q{
-              bob 'send message'
-            },
-            domain: 'org.acme',
-            wait: 'task')
-
-          wait_until { @worklist.task_ds.count == 1 }
-
-          File.open(dump_path, 'wb') { |f|
-            Florist.dump(@unit.storage.db, f, flor: true) }
-        end
+        wait_until { @worklist.task_ds.count == 1 }
       end
 
       it 'fails if the task changed meanwhile' do
@@ -641,16 +613,10 @@ describe '::Florist' do
         @unit.add_tasker(
           'bob', Florist::WorklistTasker)
 
-        unless has_dump?
+        @r = @unit.launch(
+          %q{ bob 'send message' }, domain: 'org.acme', wait: 'task')
 
-          @r = @unit.launch(
-            %q{ bob 'send message' }, domain: 'org.acme', wait: 'task')
-
-          wait_until { @worklist.task_ds.count == 1 }
-
-          File.open(dump_path, 'wb') { |f|
-            Florist.dump(@unit.storage.db, f, flor: true) }
-        end
+        wait_until { @worklist.task_ds.count == 1 }
       end
 
       describe '#resume' do

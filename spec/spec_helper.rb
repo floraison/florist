@@ -83,34 +83,34 @@ module Helpers
     end
   end
 
-  def generate_storage_uri
-
-    name = File.basename(inspect.match(/\(([^)]+)\)/)[1]).sub('.rb:', '_')
-
-    "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/#{name}.db"
-  end
-
   def delete_databases
 
     Dir['tmp/*.db'].each { |pa| FileUtils.rm_f(pa) }
   end
 
-  def delete_dumps
+#  def generate_storage_uri
+#
+#    name = File.basename(inspect.match(/\(([^)]+)\)/)[1]).sub('.rb:', '_')
+#
+#    "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/#{name}.db"
+#  end
 
-    Dir['tmp/*_dump.json'].each { |pa| FileUtils.rm_f(pa) }
-  end
-
-  def has_dump?
-
-    File.exist?(dump_path)
-  end
-
-  def dump_path
-
-    'tmp/' +
-    File.basename(caller.find { |l| l.match(/_spec\.rb:/) }).split('.rb')[0] +
-    '_dump.json'
-  end
+#  def delete_dumps
+#
+#    Dir['tmp/*_dump.json'].each { |pa| FileUtils.rm_f(pa) }
+#  end
+#
+#  def has_dump?
+#
+#    File.exist?(dump_path)
+#  end
+#
+#  def dump_path
+#
+#    'tmp/' +
+#    File.basename(caller.find { |l| l.match(/_spec\.rb:/) }).split('.rb')[0] +
+#    '_dump.json'
+#  end
 end
 
 RSpec.configure do |c|
