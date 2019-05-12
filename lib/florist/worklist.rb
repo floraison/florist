@@ -146,13 +146,13 @@ class Florist::Worklist
             domain: sdms) if sdms
 
           h[:tasks] =
-              tasks.where(id: tids).collect(&:to_h)
+            tasks.where(id: tids).collect(&:to_dump_h)
           h[:transitions] =
-              transitions.where(task_id: tids).collect(&:to_h)
+            transitions.where(task_id: tids).collect(&:to_dump_h)
           h[:transitions_assignments] =
-              @transitions_assignments.where(task_id: tids).collect(&:to_h)
+            @transitions_assignments.where(task_id: tids).collect(&:to_dump_h)
           h[:assignments] =
-              assignments.where(task_id: tids).collect(&:to_h)
+            assignments.where(task_id: tids).collect(&:to_dump_h)
 
           h[:timestamp] ||= Flor.tstamp
         end
@@ -162,7 +162,7 @@ class Florist::Worklist
 
     return Flor.dump(flor_db, io, opts, &d) if opts[:flor]
 
-    hash = d.call
+    hash = d.call({})
 
     return hash if opts[:hash] || opts[:h]
 

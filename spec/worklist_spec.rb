@@ -86,8 +86,8 @@ describe '::Florist' do
 
           l = Florist::Worklist.new(@uri1, @uri2)
 
-          expect(l.flor_db.uri).not_to eq(nil)
-          expect(l.florist_db.uri).not_to eq(nil)
+          expect(l.flor_db.uri).to eq(@uri1)
+          expect(l.florist_db.uri).to eq(@uri2)
           expect(l.florist_db.uri).not_to eq(l.flor_db.uri)
 
           expect(l.tasks.count).to eq(1)
@@ -107,10 +107,11 @@ describe '::Florist' do
         end
       end
 
-#      describe 'domain: "org.acme"' do
-#
-#        it 'instantiates a worklist limited to "org.acme.%"' do
-#
+      describe 'domain: "org.acme"' do
+
+        it 'instantiates a worklist limited to "org.acme.%"'# do
+
+# TODO bring me back
 #          l = Florist::Worklist.new(@unit, domain: 'org.acme')
 #
 #          expect(l.tasks.count).to eq(0)
@@ -122,9 +123,29 @@ describe '::Florist' do
 #          expect(l.tasks.count).to eq(1)
 #          expect(l.tasks.first.domain).to eq('org.acme.sub0')
 #        end
-#      end
-  #
-  # TODO bring me back
+      end
+    end
+
+    describe '#dump' do
+
+      it 'dumps' do
+
+        l = Florist::Worklist.new(@unit)
+
+        s = l.dump
+
+        h = JSON.load(s)
+
+        expect(h.keys.sort).to eq(%w[
+          assignments tasks timestamp transitions transitions_assignments ])
+        expect(h['tasks'][0].keys.sort).to eq(%w[
+          attls1 ctime data domain exid id mtime nid status tasker taskname ])
+      end
+    end
+
+    describe '#load' do
+
+      it 'loads'
     end
   end
 end
