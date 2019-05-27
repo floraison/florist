@@ -619,7 +619,16 @@ describe '::Florist' do
         end
 
         context 'status: x' do
-          it 'places the task in status x after transition'
+
+          it 'places the task in status x after transition' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', status: 'archived', r: true)
+
+            expect(t.state).to eq('offered')
+            expect(t.status).to eq('archived')
+          end
         end
       end
 
@@ -627,9 +636,6 @@ describe '::Florist' do
         it 'marks the task as completed and replies to the execution'
         context 'reply: false' do
           it 'marks the task as completed but does not reply'
-        end
-        context 'status: x' do
-          it 'places the task in status x after transition'
         end
       end
     end

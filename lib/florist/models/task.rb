@@ -127,9 +127,6 @@ class Florist::Task < ::Florist::FloristModel
 
   def transition_to_failed(*as)
 
-    # TODO mark as failed
-    # TODO mark as archived
-
     opts = is_opts_hash?(as.last) ? as.last : {}
 
     m = message
@@ -232,6 +229,7 @@ class Florist::Task < ::Florist::FloristModel
     assignments << :current if assignments.empty?
 
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
+    status = opts[:status] || 'active'
 
     sid = nil
 
@@ -244,7 +242,7 @@ class Florist::Task < ::Florist::FloristModel
 
       n = db[:florist_tasks]
         .where(id: id, mtime: mtime)
-        .update(mtime: now)
+        .update(mtime: now, status: status)
           #
       raise Florist::ConflictError, 'task outdated, update failed' \
         if n != 1
