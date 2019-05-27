@@ -130,17 +130,18 @@ class Florist::Task < ::Florist::FloristModel
     # TODO mark as failed
     # TODO mark as archived
 
+    opts = is_opts_hash?(as.last) ? as.last : {}
+
     m = message
     m['payload'] = payload
     m['point'] = 'failed'
 
     transition_and_or_assign('failed', *as) do
 
-      if worklist
+      if worklist && opts[:reply] != false
+
         worklist.return(m)
         remove
-      else
-        set_status('failed')
       end
     end
   end

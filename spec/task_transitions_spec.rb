@@ -594,7 +594,32 @@ describe '::Florist' do
 
         context 'reply: false' do
 
-          it 'marks the task as failed but does not reply'
+          it 'marks the task as failed but does not reply' do
+
+            mi = @unit.last_queued_message_id
+
+            t = @worklist.tasks.first
+
+            expect(t.transitions.count).to eq(1)
+
+            t.offer('user', 'bob', r: true)
+            t.fail(reply: false, r: true)
+
+            sleep 1
+
+            expect(@unit.last_queued_message_id).to eq(mi)
+
+            t = @worklist.tasks[t.id]
+
+            expect(t).not_to eq(nil)
+            expect(t.transitions.count).to eq(3)
+            expect(t.state).to eq('failed')
+            expect(t.status).to eq('active')
+          end
+        end
+
+        context 'status: x' do
+          it 'places the task in status x after transition'
         end
       end
 
@@ -602,6 +627,9 @@ describe '::Florist' do
         it 'marks the task as completed and replies to the execution'
         context 'reply: false' do
           it 'marks the task as completed but does not reply'
+        end
+        context 'status: x' do
+          it 'places the task in status x after transition'
         end
       end
     end
