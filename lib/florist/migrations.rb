@@ -32,6 +32,9 @@ module Florist
       opts = [ to, from, opts ].find { |e| e.is_a?(Hash) } || {}
       opts[:target] ||= to if to.is_a?(Integer)
       opts[:current] ||= from if from.is_a?(Integer)
+
+      opts[:table] = (opts[:migration_table] || :schema_info).to_sym
+      opts[:column] = (opts[:migration_column] || :version).to_sym
         #
         # defaults for the migration version table:
         # { table: :schema_info,
