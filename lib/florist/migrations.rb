@@ -65,6 +65,7 @@ module Florist
 
       case o
       when String then Sequel.connect(o, opts)
+      when Flor::Storage then o.db
       else o
       end
     end
