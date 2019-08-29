@@ -221,6 +221,11 @@ class Florist::Worklist
     end
   end
 
+  def migrate(to=nil, from=nil, opts=nil)
+
+    Florist.migrate(to, from, @opts.merge(opts || {}))
+  end
+
   protected
 
   def extract_dump_and_load_filters(opts)
