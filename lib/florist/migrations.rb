@@ -30,6 +30,8 @@ module Florist
     def migrate(db_or_db_uri, to=nil, from=nil, opts=nil)
 
       opts = [ to, from, opts ].find { |e| e.is_a?(Hash) } || {}
+      opts = opts.inject({}) { |h, (k, v)| h[k.to_sym] = v; h }
+
       opts[:target] ||= to if to.is_a?(Integer)
       opts[:current] ||= from if from.is_a?(Integer)
 

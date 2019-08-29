@@ -223,7 +223,7 @@ class Florist::Worklist
 
   def migrate(to=nil, from=nil, opts=nil)
 
-    Florist.migrate(to, from, @opts.merge(opts || {}))
+    Florist.migrate(florist_db, to, from, @opts.merge(opts || {}))
   end
 
   protected
