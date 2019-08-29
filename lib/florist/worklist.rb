@@ -19,6 +19,8 @@ class Florist::Worklist
   alias rtype resource_type
   alias rname resource_name
 
+  alias db florist_db
+
   # Florist::Worklist.new(flor_unit/*, opts*/)
   # Florist::Worklist.new(flor_unit, florist_db/*, opts*/)
   # Florist::Worklist.new(flor_unit, florist_db_uri/*, opts*/)
@@ -275,7 +277,7 @@ class Florist::Worklist
 
     @unit.conf
       .inject({}) { |h, (k, v)|
-        m = k.match(/\A(?:wli|wol)_(.+)\z/)
+        m = k.match(/\A(?:wli|wol|fst)_(.+)\z/)
         h[m[1]] = v if m
         h }
   end
