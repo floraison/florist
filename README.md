@@ -1,5 +1,5 @@
 
-# flor
+# florist
 
 <!--
 [![Build Status](https://secure.travis-ci.org/floraison/flor-worklist.svg)](http://travis-ci.org/floraison/flor-worklist)
