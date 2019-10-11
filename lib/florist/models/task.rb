@@ -197,11 +197,9 @@ class Florist::Task < ::Florist::FloristModel
 
     db[:florist_tasks].where(id: id).delete
 
-    w = { task_id: id }
-
-    [ :florist_transitions, :florist_transitions_assignments,
+    [ :florist_transitions,:florist_transitions_assignments,
       :florist_assignments ]
-        .each { |t| db[t].where(w).delete }
+        .each { |t| db[t].where(task_id: id).delete }
   end
 
   def guard(v, s)
