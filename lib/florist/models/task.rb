@@ -143,11 +143,30 @@ class Florist::Task < ::Florist::FloristModel
     end
   end
 
+  def transition_to_completed(*as)
+
+    opts = is_opts_hash?(as.last) ? as.last : {}
+
+    m = message
+    m['payload'] = payload
+    m['point'] = 'return' # <-- confirm TODO
+
+    transition_and_or_assign('completed', *as) do
+
+      if worklist && opts[:reply] != false
+
+        worklist.return(m)
+        remove
+      end
+    end
+  end
+
   alias offer transition_to_offered
   alias allocate transition_to_allocated
   alias start transition_to_started
   alias suspend transition_to_suspended
   alias fail transition_to_failed
+  alias complete transition_to_completed
 
   alias pause transition_to_suspended
 
@@ -402,9 +421,12 @@ class Florist::Task < ::Florist::FloristModel
 
   def determine_tname(state)
 
-    return 'allocate' if state == 'allocated'
-    return state[0..-3] if state[-2..-1] == 'ed'
-    "to-#{state}"
+    case state
+    when 'allocated' then 'allocate'
+    when 'completed' then 'complete'
+    when /ed$/ then state[0..-3]
+    else "to-#{state}"
+    end
   end
 end
 

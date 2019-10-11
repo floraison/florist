@@ -449,6 +449,10 @@ describe '::Florist' do
               .to eq('ret' => 'send message', 'name' => 'xen')
           end
         end
+
+        context 'merge:' do
+          it 'merges into the current payload'
+        end
       end
 
       describe '#transition_to_offered / #offer' do
@@ -592,6 +596,10 @@ describe '::Florist' do
           expect(@worklist.tasks[t.id]).to eq(nil)
         end
 
+        context 'archive: true' do
+          it 'flags the task as archived instead of deleting it'
+        end
+
         context 'reply: false' do
 
           it 'marks the task as failed but does not reply' do
@@ -633,7 +641,28 @@ describe '::Florist' do
       end
 
       describe '#transition_to_completed / #complete' do
-        it 'marks the task as completed and replies to the execution'
+
+        it 'marks the task as completed and replies to the execution' do
+
+          t = @worklist.tasks.first
+
+          t.offer('user', 'bob', r: true)
+          t.complete
+          #t.complete(payload: { nada: 'surf' })
+
+          m = @unit.wait(t.exid, 'return')
+
+          expect(m['point']).to eq('return')
+          expect(m['exid']).to eq(t.exid)
+          expect(m['payload']).to eq({ 'ret' => 'send message' })
+
+          expect(@worklist.tasks[t.id]).to eq(nil)
+        end
+
+        context 'archive: true' do
+          it 'flags the task as archived instead of deleting it'
+        end
+
         context 'reply: false' do
           it 'marks the task as completed but does not reply'
         end
