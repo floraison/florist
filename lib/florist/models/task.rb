@@ -195,11 +195,18 @@ class Florist::Task < ::Florist::FloristModel
 
   def remove
 
-    db[:florist_tasks].where(id: id).delete
+    db.transaction do
+      #
+      # most of the time simply-reuses the upstream,
+      # #transition_or_assign, transaction
 
-    [ :florist_transitions,:florist_transitions_assignments,
-      :florist_assignments ]
-        .each { |t| db[t].where(task_id: id).delete }
+      db[:florist_tasks]
+        .where(id: id).delete
+
+      %w[ transitions transitions_assignments assignments ]
+          .each { |t| db["florist_#{t}".to_sym]
+            .where(task_id: id).delete }
+    end
   end
 
   def guard(v, s)
