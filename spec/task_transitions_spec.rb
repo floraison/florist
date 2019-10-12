@@ -704,7 +704,29 @@ describe '::Florist' do
         end
 
         context 'reply: false' do
-          it 'marks the task as completed but does not reply'
+
+          it 'marks the task as completed but does not reply' do
+
+            mi = @unit.last_queued_message_id
+
+            t = @worklist.tasks.first
+
+            expect(t.transitions.count).to eq(1)
+
+            t.offer('user', 'bob', r: true)
+            t.complete(reply: false, r: true)
+
+            sleep 1
+
+            expect(@unit.last_queued_message_id).to eq(mi)
+
+            t = @worklist.tasks[t.id]
+
+            expect(t).not_to eq(nil)
+            expect(t.transitions.count).to eq(3)
+            expect(t.state).to eq('completed')
+            expect(t.status).to eq('active')
+          end
         end
       end
     end
