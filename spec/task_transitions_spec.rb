@@ -596,10 +596,6 @@ describe '::Florist' do
           expect(@worklist.tasks[t.id]).to eq(nil)
         end
 
-        context 'archive: true' do
-          it 'flags the task as archived instead of deleting it'
-        end
-
         context 'reply: false' do
 
           it 'marks the task as failed but does not reply' do
@@ -623,6 +619,30 @@ describe '::Florist' do
             expect(t.transitions.count).to eq(3)
             expect(t.state).to eq('failed')
             expect(t.status).to eq('active')
+          end
+        end
+
+        context 'archive: true' do
+
+          it 'flags the task as archived instead of deleting it' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.fail(archive: true, r: true)
+
+            m = @unit.wait(t.exid, 'failed')
+
+            expect(m['point']).to eq('failed')
+            expect(m['exid']).to eq(t.exid)
+            expect(m['payload']).to eq({ 'ret' => 'send message' })
+
+            t = @worklist.tasks[t.id]
+
+            expect(t).not_to eq(nil)
+            expect(t.transitions.count).to eq(3)
+            expect(t.state).to eq('failed')
+            expect(t.status).to eq('archived')
           end
         end
 
@@ -660,7 +680,27 @@ describe '::Florist' do
         end
 
         context 'archive: true' do
-          it 'flags the task as archived instead of deleting it'
+
+          it 'flags the task as archived instead of deleting it' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.complete(archive: true, r: true)
+
+            m = @unit.wait(t.exid, 'return')
+
+            expect(m['point']).to eq('return')
+            expect(m['exid']).to eq(t.exid)
+            expect(m['payload']).to eq({ 'ret' => 'send message' })
+
+            t = @worklist.tasks[t.id]
+
+            expect(t).not_to eq(nil)
+            expect(t.transitions.count).to eq(3)
+            expect(t.state).to eq('completed')
+            expect(t.status).to eq('archived')
+          end
         end
 
         context 'reply: false' do

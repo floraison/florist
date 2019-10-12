@@ -62,7 +62,7 @@ Sequel.migration do
         # "failed"
         # "completed"
         #
-        # "archived"
+        # "archived" (NO, this is a florist_task :status value)
 
       String :name, null: false
         #

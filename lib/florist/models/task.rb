@@ -127,38 +127,24 @@ class Florist::Task < ::Florist::FloristModel
 
   def transition_to_failed(*as)
 
-    opts = is_opts_hash?(as.last) ? as.last : {}
+    os = is_opts_hash?(as.last) ? as.last : {}
 
     m = message
     m['payload'] = payload
     m['point'] = 'failed'
 
-    transition_and_or_assign('failed', *as) do
-
-      if worklist && opts[:reply] != false
-
-        worklist.return(m)
-        remove
-      end
-    end
+    transition_and_or_assign('failed', *as) { reply_to_engine(os, m) }
   end
 
   def transition_to_completed(*as)
 
-    opts = is_opts_hash?(as.last) ? as.last : {}
+    os = is_opts_hash?(as.last) ? as.last : {}
 
     m = message
     m['payload'] = payload
     m['point'] = 'return' # <-- confirm TODO
 
-    transition_and_or_assign('completed', *as) do
-
-      if worklist && opts[:reply] != false
-
-        worklist.return(m)
-        remove
-      end
-    end
+    transition_and_or_assign('completed', *as) { reply_to_engine(os, m) }
   end
 
   alias offer transition_to_offered
@@ -192,6 +178,16 @@ class Florist::Task < ::Florist::FloristModel
   end
 
   protected
+
+  def reply_to_engine(opts, msg)
+
+    return unless worklist
+    return if opts[:reply] == false
+
+    worklist.return(msg)
+
+    remove unless opts[:status]
+  end
 
   def remove
 
@@ -253,7 +249,9 @@ class Florist::Task < ::Florist::FloristModel
     assignments << :current if assignments.empty?
 
     name = opts[:transition_name] || opts[:tname] || determine_tname(state)
+
     status = opts[:status] || 'active'
+    status = opts[:status] = 'archived' if opts[:archive]
 
     sid = nil
 
