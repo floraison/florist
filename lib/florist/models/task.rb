@@ -312,6 +312,9 @@ class Florist::Task < ::Florist::FloristModel
 
   def determine_transition_content(opts, ls, now)
 
+    m = opts[:merge]
+    opts[:payload] = (opts[:payload] || payload).merge(m) if m
+
     (ls ? ls.data : []) << opts
       .inject({ tstamp: now }) { |r, (k, v)|
         r[k] = v if [ :payload, :set, :unset ].include?(k)

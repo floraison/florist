@@ -388,31 +388,6 @@ describe '::Florist' do
           expect(as.collect(&:rtype)).to eq(%w[ user group ])
           expect(as.collect(&:rname)).to eq(%w[ alice glup ])
         end
-      end
-
-      describe '#transition_to_allocated / #allocate' do
-
-        it 'adds an "allocated" transition to the task' do
-
-          t = @worklist.tasks.first
-
-          expect(t.tname).to eq('create')
-          expect(t.state).to eq('created')
-
-          sid = t.allocate('user', 'charly')
-          t.refresh
-
-          expect(t.last_transition.id).to eq(sid)
-          expect(t.tname).to eq('allocate')
-          expect(t.state).to eq('allocated')
-
-          a = t.assignment
-          as = t.assignments
-
-          expect(a.rtype).to eq('user')
-          expect(a.rname).to eq('charly')
-          expect(as.size).to eq(1)
-        end
 
         context 'payload:/fields:' do
 
@@ -451,7 +426,57 @@ describe '::Florist' do
         end
 
         context 'merge:' do
-          it 'merges into the current payload'
+
+          it 'merges into the current payload' do
+
+            t = @worklist.tasks.first
+
+            t.allocate(
+              'user', 'charly',
+              merge: { name: 'leo' }, r: true)
+            t.allocate(
+              'user', 'david',
+              merge: { name: 'xen' }, r: true)
+            t.allocate(
+              'user', 'estelle',
+              payload: { age: 29 }, merge: { name: 'yanxi' }, r: true)
+
+            d = t.transition.send(:_data)
+
+            expect(d.size).to eq(3)
+
+            expect(d[0]['payload'])
+              .to eq('ret' => 'send message', 'name' => 'leo')
+            expect(d[1]['payload'])
+              .to eq('ret' => 'send message', 'name' => 'xen')
+            expect(d[2]['payload'])
+              .to eq('age' => 29, 'name' => 'yanxi')
+          end
+        end
+      end
+
+      describe '#transition_to_allocated / #allocate' do
+
+        it 'adds an "allocated" transition to the task' do
+
+          t = @worklist.tasks.first
+
+          expect(t.tname).to eq('create')
+          expect(t.state).to eq('created')
+
+          sid = t.allocate('user', 'charly')
+          t.refresh
+
+          expect(t.last_transition.id).to eq(sid)
+          expect(t.tname).to eq('allocate')
+          expect(t.state).to eq('allocated')
+
+          a = t.assignment
+          as = t.assignments
+
+          expect(a.rtype).to eq('user')
+          expect(a.rname).to eq('charly')
+          expect(as.size).to eq(1)
         end
       end
 
