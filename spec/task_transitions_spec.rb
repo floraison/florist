@@ -611,7 +611,6 @@ describe '::Florist' do
 
           t.offer('user', 'bob', r: true)
           t.fail(r: true)
-          #t.fail(payload: { nada: 'surf' }, r: true)
 
           m = @unit.wait(t.exid, 'failed')
 
@@ -683,6 +682,47 @@ describe '::Florist' do
             expect(t.status).to eq('archived')
           end
         end
+
+        context 'payload: x' do
+
+          it 'gives a new payload to the transition and the workitem' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.fail(payload: { name: 'litch' })
+
+            m = @unit.wait(t.exid, 'failed')
+
+            expect(m['point']).to eq('failed')
+            expect(m['exid']).to eq(t.exid)
+            expect(m['payload']).to eq({ 'name' => 'litch' })
+
+            expect(@worklist.tasks[t.id]).to eq(nil)
+          end
+        end
+
+        context 'merge: x' do
+
+          it 'gives a new payload to the transition and the workitem' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.fail(merge: { name: 'fantomas' })
+
+            m = @unit.wait(t.exid, 'failed')
+
+            expect(m['point']
+              ).to eq('failed')
+            expect(m['exid']
+              ).to eq(t.exid)
+            expect(m['payload']
+              ).to eq({ 'name' => 'fantomas', 'ret' => 'send message' })
+
+            expect(@worklist.tasks[t.id]).to eq(nil)
+          end
+        end
       end
 
       describe '#transition_to_completed / #complete' do
@@ -751,6 +791,47 @@ describe '::Florist' do
             expect(t.transitions.count).to eq(3)
             expect(t.state).to eq('completed')
             expect(t.status).to eq('active')
+          end
+        end
+
+        context 'payload: x' do
+
+          it 'gives a new payload to the transition and the workitem' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.complete(payload: { name: 'wallace' })
+
+            m = @unit.wait(t.exid, 'return')
+
+            expect(m['point']).to eq('return')
+            expect(m['exid']).to eq(t.exid)
+            expect(m['payload']).to eq({ 'name' => 'wallace' })
+
+            expect(@worklist.tasks[t.id]).to eq(nil)
+          end
+        end
+
+        context 'merge: x' do
+
+          it 'gives a new payload to the transition and the workitem' do
+
+            t = @worklist.tasks.first
+
+            t.offer('user', 'bob', r: true)
+            t.complete(merge: { name: 'gromit' })
+
+            m = @unit.wait(t.exid, 'return')
+
+            expect(m['point']
+              ).to eq('return')
+            expect(m['exid']
+              ).to eq(t.exid)
+            expect(m['payload']
+              ).to eq({ 'name' => 'gromit', 'ret' => 'send message' })
+
+            expect(@worklist.tasks[t.id]).to eq(nil)
           end
         end
       end

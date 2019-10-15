@@ -129,22 +129,14 @@ class Florist::Task < ::Florist::FloristModel
 
     os = is_opts_hash?(as.last) ? as.last : {}
 
-    m = message
-    m['payload'] = payload
-    m['point'] = 'failed'
-
-    transition_and_or_assign('failed', *as) { reply_to_engine(os, m) }
+    transition_and_or_assign('failed', *as) { reply_to_engine('failed', os) }
   end
 
   def transition_to_completed(*as)
 
     os = is_opts_hash?(as.last) ? as.last : {}
 
-    m = message
-    m['payload'] = payload
-    m['point'] = 'return' # <-- confirm TODO
-
-    transition_and_or_assign('completed', *as) { reply_to_engine(os, m) }
+    transition_and_or_assign('completed', *as) { reply_to_engine('return', os) }
   end
 
   alias offer transition_to_offered
@@ -179,12 +171,20 @@ class Florist::Task < ::Florist::FloristModel
 
   protected
 
-  def reply_to_engine(opts, msg)
+  def reply_to_engine(point, opts)
 
     return unless worklist
     return if opts[:reply] == false
 
-    worklist.return(msg)
+    pl = opts[:payload] || payload
+    me = opts[:merge]
+    pl = pl.merge(me) if me
+
+    m = message.dup
+    m['point'] = point
+    m['payload'] = pl
+
+    worklist.return(m)
 
     remove unless opts[:status]
   end
