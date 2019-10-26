@@ -55,9 +55,11 @@ class Florist::Worklist
         Florist::TransitionAssignment,
         :florist_transitions_assignments)
 
-#    @tasks = @tasks
-#      .where(Sequel.like(:domain, @domain.split('.').join('.') + '.%')) \
-#        unless @domain.empty?
+    @domain = opts['domain'] || ''
+
+    @tasks = @tasks
+      .where(Sequel.like(:domain, @domain.split('.').join('.') + '.%')) \
+        unless @domain.empty?
   end
 
   def task_dataset

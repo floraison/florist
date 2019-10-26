@@ -107,20 +107,19 @@ describe '::Florist::Worklist' do
 
     describe 'domain: "org.acme"' do
 
-      it 'instantiates a worklist limited to "org.acme.%"'# do
+      it 'instantiates a worklist limited to "org.acme.%"' do
 
-# TODO bring me back
-#          l = Florist::Worklist.new(@unit, domain: 'org.acme')
-#
-#          expect(l.tasks.count).to eq(0)
-#
-#          @unit.launch(%q{ alice _ }, domain: 'org.acme.sub0')
-#
-#          wait_until { @unit.storage.db[:florist_tasks].count > 1 }
-#
-#          expect(l.tasks.count).to eq(1)
-#          expect(l.tasks.first.domain).to eq('org.acme.sub0')
-#        end
+          l = Florist::Worklist.new(@unit, domain: 'org.acme')
+
+          expect(l.tasks.count).to eq(0)
+
+          @unit.launch(%q{ alice _ }, domain: 'org.acme.sub0')
+
+          wait_until { @unit.storage.db[:florist_tasks].count > 1 }
+
+          expect(l.tasks.count).to eq(1)
+          expect(l.tasks.first.domain).to eq('org.acme.sub0')
+        end
     end
   end
 end
