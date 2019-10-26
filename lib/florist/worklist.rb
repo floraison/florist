@@ -55,11 +55,25 @@ class Florist::Worklist
         Florist::TransitionAssignment,
         :florist_transitions_assignments)
 
-    @domain = opts['domain'] || ''
+    ds =
+      opts['domains'] || opts['domain'] || []
+    @domains =
+      case ds
+      when String then ds.split(/[,;]/)
+      when Array then ds
+      else fail(
+        ArgumentError.new("cannot determine domain(s) from #{ds.inspect}"))
+      end
 
-    @tasks = @tasks
-      .where(Sequel.like(:domain, @domain.split('.').join('.') + '.%')) \
-        unless @domain.empty?
+    @tasks =
+      @tasks.where(
+        @domains
+          .collect { |d|
+            Sequel.like(:domain, d) |
+            Sequel.like(:domain, d.split('.').join('.') + '.%') }
+          .inject { |r, l|
+            r | l }
+      ) if @domains.any?
   end
 
   def task_dataset
