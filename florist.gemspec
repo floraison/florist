@@ -10,8 +10,7 @@ Gem::Specification.new do |s|
   s.platform = Gem::Platform::RUBY
   s.authors = [ 'John Mettraux' ]
   s.email = [ 'jmettraux+flor@gmail.com' ]
-  s.homepage = 'http://github.com/floraison'
-  #s.rubyforge_project = 'flor'
+  s.homepage = 'https://github.com/floraison/florist'
   s.license = 'MIT'
   s.summary = 'a worklist implementation for the flor workflow engine'
 
