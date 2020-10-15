@@ -67,7 +67,7 @@ describe '::Florist' do
         end
       end
 
-      describe '#taskname / #task_name' do
+      describe '#taskname / #task_name / #name' do
 
         it 'returns the name of the task' do
 
@@ -75,6 +75,7 @@ describe '::Florist' do
 
           expect(t.taskname).to eq('send message')
           expect(t.task_name).to eq('send message')
+          expect(t.name).to eq('send message')
         end
       end
 

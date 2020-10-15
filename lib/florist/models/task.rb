@@ -7,6 +7,7 @@ class Florist::Task < ::Florist::FloristModel
   def message; data['message']; end
 
   def task_name; taskname; end
+  alias name task_name
 
   def attl; message['attl']; end
   alias atta attl

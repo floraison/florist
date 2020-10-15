@@ -10,6 +10,8 @@
 
 It aims to follow the guidance/conventions found at [http://www.workflowpatterns.com/patterns/resource/](http://www.workflowpatterns.com/patterns/resource/).
 
+There is a `WorklistTasker` a flor tasker that, upon receiving a task from the flor engine it's bound to, stores it in its target worklist.
+
 ```
                                                           .-----------.
                                                       ,-->| suspended |
@@ -26,18 +28,59 @@ It aims to follow the guidance/conventions found at [http://www.workflowpatterns
 
 ## API
 
-```ruby
-list = Florist::Worklist.new(@unit.storage.db)
-# ...
-```
 
 ### Florist::Worklist
 
-TODO
+A worklist needs access to the a flor engine/unit database and, if it's not the same database, a florist database.
+
+```ruby
+list = Florist::Worklist.new(@flor_unit)
+list = Florist::Worklist.new('postgresql://127.0.0.1/flor')
+list = Florist::Worklist.new(@flor_unit, 'postgresql://127.0.0.1/florist')
+list = Florist::Worklist.new('postgresql://127.0.0.1/flor', 'postgresql://127.0.0.1/florist')
+# ...
+```
+
+Once a worklist is instantiated, one can extract task instances out of it via the `#tasks` accessor. That yields a [Sequel](http://sequel.jeremyevans.net/) dataset.
+
+```ruby
+puts "there are currently #{list.tasks.count} task(s) in the worklist"
+
+tasks = list.tasks.all
+  # fetches all the tasks in the worklist
+
+tasks = list.tasks.where(domain: 'acme.org.accounting')
+  # fetches all the tasks whose domain is exactly 'acme.org.accounting'
+
+tasks = list.tasks.where(Sequel.like(:domain, 'acme.org.accounting.%'))
+  # fetches all the tasks under the demain 'acme.org.accounting'
+```
+
+TODO continue me
+
 
 ### Florist::Task
 
+```ruby
+task = lists.tasks.first
+
+p task.exid    # the id of the execution that emitted the task
+p task.tasker  # the tasker name as seen from the execution
+p task.name    # the task name
+
+p task.payload
+p task.fields   # the hash, the payload of the workitem behind the task
+```
+
+#### tasks, transitions, and assignments
+
+TODO continue me
+
+
+### Florist::WorklistTasker
+
 TODO
+
 
 ## LICENSE
 
