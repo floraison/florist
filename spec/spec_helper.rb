@@ -75,11 +75,14 @@ module Helpers
     fn = key ? "tmp/florist_#{key}_test.db" : nil
     FileUtils.rm_f(fn) if fn && opts[:delete]
 
+    #q = '?timeout=60000'
+    q = ''
+
     if key
-      "#{jruby? ? 'jdbc:' : ''}sqlite://#{fn}"
+      "#{jruby? ? 'jdbc:' : ''}sqlite://#{fn}#{q}"
     else
       #jruby? ? 'jdbc:sqlite://tmp/florist_test.db' : 'sqlite::memory:'
-      "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/florist_test.db"
+      "#{jruby? ? 'jdbc:' : ''}sqlite://tmp/florist_test.db#{q}"
     end
   end
 
