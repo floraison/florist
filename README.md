@@ -74,6 +74,8 @@ p task.fields   # the hash, the payload of the workitem behind the task
 
 #### tasks, transitions, and assignments
 
+As seen above, the task, freshly emitted by a flor engine, starts in the "created" state. The worklist may then automatically assign or offer it to a "resource" (someone or something with access to the worklist).
+
 TODO continue me
 
 
