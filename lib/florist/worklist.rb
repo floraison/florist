@@ -231,9 +231,17 @@ class Florist::Worklist
       end
 
     if opts[:flor]
+
       Flor.load(flor_db, string_or_io, opts, &d)
+
     else
-      d.call({}, {})
+
+      s = string_or_io
+      s = s.read if s.respond_to?(:read)
+      string_or_io.close if string_or_io.respond_to?(:close) && opts[:close]
+      h = JSON.load(s)
+
+      d.call(h, {})
     end
   end
 

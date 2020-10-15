@@ -58,6 +58,8 @@ describe '::Florist::Worklist' do
 
         s = @worklist.dump
 
+        #File.open('tmp/worklist_dump.json', 'wb') { |f| f.write(s) }
+
         h = JSON.load(s)
 
         expect(h.keys.sort).to eq(%w[
@@ -72,7 +74,19 @@ describe '::Florist::Worklist' do
 
     describe '()' do
 
-      it 'loads'
+      it 'loads' do
+
+        expect(@worklist.tasks.count).to eq(
+          0)
+
+        r = @worklist.load(File.read('spec/worklist_dump.json'))
+
+        expect(@worklist.tasks.count).to eq(
+          3)
+        expect(r).to eq(
+          tasks: 3, transitions: 3, transitions_assignments: 0, assignments: 0)
+      end
     end
   end
 end
+
